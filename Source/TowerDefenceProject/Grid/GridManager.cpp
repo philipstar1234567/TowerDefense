@@ -11,6 +11,9 @@ AGridManager::AGridManager()
 	TileMesh = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TileMesh"));
 	TileMesh->SetupAttachment(RootComponent);
 	TileMesh->NumCustomDataFloats = 4; // RGBA | color change logic
+	TileMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	TileMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	TileMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	// Variables
 	TileSize = 100.f;
@@ -91,6 +94,28 @@ bool AGridManager::SetTileState(int32 X, int32 Y, ETileState NewState)
 	Tile.TileState = NewState;
 
 	UpdateTileVisual(Tile); // Update ISMC Color
+	return true;
+}
+
+bool AGridManager::WorldToGrid(const FVector& WorldLocation, FVector2D& OutGridCoords) const
+{
+	FVector GridOrigin = GetActorLocation();
+
+	// Adjust for tile centering
+	float LocalX = WorldLocation.X - GridOrigin.X;
+	float LocalY = WorldLocation.Y - GridOrigin.Y;
+
+	int32 GridX = FMath::FloorToInt(LocalX / TileSize);
+	int32 GridY = FMath::FloorToInt(LocalY / TileSize);
+
+	// Bounds check
+	if (GridX < 0 || GridX >= GridWidth || GridY < 0 || GridY >= GridHeight)
+	{
+		OutGridCoords = FVector2D(-1, -1);
+		return false;
+	}
+
+	OutGridCoords = FVector2D(GridX, GridY);
 	return true;
 }
 

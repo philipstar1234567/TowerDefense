@@ -11,6 +11,7 @@
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "Grid/GridManager.h"
+#include "Grid/BuildManager.h"
 #include "TopDownPawn.generated.h"
 
 UCLASS()
@@ -39,13 +40,19 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UFloatingPawnMovement* FloatingPawnMovement;
 
-	// Grid logical stuff
+	// GridManager
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
 	TSubclassOf<AGridManager> GridManagerClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	AGridManager* GridManagerRef;
 
+	// BuildManager
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	TSubclassOf<ABuildManager> BuildManagerClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
+	ABuildManager* BuildManagerRef;
 	// Public Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ZoomSpeed;

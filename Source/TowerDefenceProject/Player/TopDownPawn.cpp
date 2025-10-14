@@ -62,7 +62,28 @@ void ATopDownPawn::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("GridManagerClass is not set in TopDownPawn!"));
 	}
 
+	// Spawn BuildManager
+	if (BuildManagerClass)
+	{
+		FVector SpawnLocation = FVector(0.f, 0.f, 0.f);
+		FRotator SpawnRotation = FRotator::ZeroRotator;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+		BuildManagerRef = GetWorld()->SpawnActor<ABuildManager>(
+			BuildManagerClass, SpawnLocation, SpawnRotation, SpawnParams
+		);
+
+		if (!BuildManagerRef)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to spawn BuildManager!"));
+		}
+	}
+
+	if (BuildManagerRef && GridManagerRef)
+	{
+		BuildManagerRef->SetGridManager(GridManagerRef); // Giving the reference
+	}
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC)
@@ -148,6 +169,10 @@ void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 void ATopDownPawn::OnLeftMousePressed()
 {
 	UE_LOG(LogTemp, Log, TEXT("Left Mouse Pressed"));
+	if (bBuildModeEnabled && BuildManagerRef)
+	{
+		BuildManagerRef->TryPlaceTower();
+	}
 }
 
 void ATopDownPawn::OnRightMousePressed()
@@ -159,6 +184,8 @@ void ATopDownPawn::OnRightMousePressed()
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
 			PC->bShowMouseCursor = false;
+
+			BuildManagerRef->OnPlayerRotating(true);
 
 			FInputModeGameOnly InputMode;
 			PC->SetInputMode(InputMode);
@@ -173,9 +200,11 @@ void ATopDownPawn::OnRightMouseReleased()
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
 		// Reset mouse to center
-		PC->SetMouseLocation(ViewportCenter.X, ViewportCenter.Y);
+		//PC->SetMouseLocation(ViewportCenter.X, ViewportCenter.Y);
 
 		PC->bShowMouseCursor = true;
+
+		BuildManagerRef->OnPlayerRotating(false);
 
 		FInputModeGameAndUI InputMode;
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
@@ -255,11 +284,10 @@ void ATopDownPawn::ToggleBuildMode()
 					: ETileState::Default;
 
 				GridManagerRef->SetTileState(X, Y, NewState);
-
 			}
 		}
 	}
-
+	BuildManagerRef->SetBuildModeActive(bBuildModeEnabled);
 }
 
 void ATopDownPawn::ZoomCamera(const FInputActionValue& Value)

@@ -36,6 +36,10 @@ public:
 	UFUNCTION()
 	bool SetTileState(int32 X, int32 Y, ETileState NewState);
 
+	// HelperFunction
+	UFUNCTION(BlueprintCallable, Category = "Grid")
+	bool WorldToGrid(const FVector& WorldLocation, FVector2D& OutGridCoords) const;
+
 	// GridArray
 	TArray<TArray<FTileData>> TileGrid;
 
