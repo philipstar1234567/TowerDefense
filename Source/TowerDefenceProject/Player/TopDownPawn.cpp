@@ -30,6 +30,7 @@ ATopDownPawn::ATopDownPawn()
 	bCameraInterpolationActive = false;
 	bGodViewEnabled = false;
 	bBuildModeEnabled = false;
+	bDeleteModeEnabled = false;
 	bInvertedScrollDirection = true;
 
 	// default thingy, dont know if needed
@@ -157,9 +158,10 @@ void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		// MouseCamera - MouseX
 		EnhancedInput->BindAction(IA_MouseX, ETriggerEvent::Triggered, this, &ATopDownPawn::RotateCamera);
 
-		// Toggles, View and mode - C B
+		// Toggles, View and mode - C B X
 		EnhancedInput->BindAction(IA_ToggleView, ETriggerEvent::Triggered, this, &ATopDownPawn::ToggleView);
 		EnhancedInput->BindAction(IA_ToggleBuildMode, ETriggerEvent::Triggered, this, &ATopDownPawn::ToggleBuildMode);
+		EnhancedInput->BindAction(IA_ToggleDeleteMode, ETriggerEvent::Triggered, this, &ATopDownPawn::ToggleDeleteMode);
 		
 		// Zoom - MouseWheel
 		EnhancedInput->BindAction(IA_Zoom, ETriggerEvent::Triggered, this, &ATopDownPawn::ZoomCamera);
@@ -169,9 +171,18 @@ void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 void ATopDownPawn::OnLeftMousePressed()
 {
 	UE_LOG(LogTemp, Log, TEXT("Left Mouse Pressed"));
-	if (bBuildModeEnabled && BuildManagerRef)
+	if (!BuildManagerRef)
+		return;
+
+	if (BuildManagerRef->IsBuildModeActive())
 	{
 		BuildManagerRef->TryPlaceTower();
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: TryPlaceTower"))
+	}
+	else if (BuildManagerRef->IsDeleteModeActive())
+	{
+		BuildManagerRef->TryDeleteTower();
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: TryDeleteTower"))
 	}
 }
 
@@ -272,6 +283,21 @@ void ATopDownPawn::ToggleBuildMode()
 {
 	bBuildModeEnabled = !bBuildModeEnabled;
 
+	// ensure mutual exclusivity
+	if (bBuildModeEnabled && bDeleteModeEnabled)
+	{
+		bDeleteModeEnabled = false;
+		if (BuildManagerRef)
+		{
+			BuildManagerRef->SetDeleteModeActive(false);
+		}
+	}
+
+	if (BuildManagerRef)
+	{
+		BuildManagerRef->SetBuildModeActive(bBuildModeEnabled);
+	}
+
 	if (GridManagerRef)
 	{
 		for (int32 X = 0; X < GridManagerRef->GridWidth; ++X)
@@ -279,15 +305,87 @@ void ATopDownPawn::ToggleBuildMode()
 			for (int32 Y = 0; Y < GridManagerRef->GridHeight; ++Y)
 			{
 				FTileData& Tile = GridManagerRef->TileGrid[X][Y];
-				ETileState NewState = bBuildModeEnabled
-					? (Tile.bIsOccupied ? ETileState::Occupied : ETileState::Buildable)
-					: ETileState::Default;
 
-				GridManagerRef->SetTileState(X, Y, NewState);
+				// Determine the new visual state
+				ETileVisualState NewVisualState = ETileVisualState::Default;
+
+				if (bBuildModeEnabled)
+				{
+					// If the tile is empty, make it green (buildable)
+					if (Tile.Occupancy == ETileOccupancyState::Empty)
+					{
+						NewVisualState = ETileVisualState::Buildable;
+					}
+					else if (Tile.Occupancy == ETileOccupancyState::Tower)
+					{
+						NewVisualState = ETileVisualState::Occupied;
+					}
+					else if (Tile.Occupancy == ETileOccupancyState::Path)
+					{
+						NewVisualState = ETileVisualState::Blocked;
+					}
+				}
+				
+				Tile.VisualState = NewVisualState;
+				GridManagerRef->SetTileVisual(X, Y, NewVisualState);
 			}
 		}
+
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: BuildMode: %s"), bBuildModeEnabled ?
+			TEXT("Enabled") : TEXT("Disabled"));
 	}
-	BuildManagerRef->SetBuildModeActive(bBuildModeEnabled);
+}
+
+void ATopDownPawn::ToggleDeleteMode()
+{
+	bDeleteModeEnabled = !bDeleteModeEnabled;
+
+	// Ensure modes are mutually exclusive (disable build if enabling delete)
+	if (bDeleteModeEnabled && bBuildModeEnabled)
+	{
+		bBuildModeEnabled = false;
+		if (BuildManagerRef)
+		{
+			BuildManagerRef->SetBuildModeActive(false);
+		}
+	}
+
+	if (BuildManagerRef)
+	{
+		BuildManagerRef->SetDeleteModeActive(bDeleteModeEnabled);
+	}
+
+	if (GridManagerRef)
+	{
+		for (int32 X = 0; X < GridManagerRef->GridWidth; ++X)
+		{
+			for (int32 Y = 0; Y < GridManagerRef->GridHeight; ++Y)
+			{
+				FTileData& Tile = GridManagerRef->TileGrid[X][Y];
+
+				ETileVisualState NewVisualState = ETileVisualState::Default;
+
+				if (bDeleteModeEnabled)
+				{
+					if (Tile.Occupancy == ETileOccupancyState::Tower)
+					{
+						NewVisualState = ETileVisualState::Occupied; // Deletable tiles
+					}
+					else
+					{
+						NewVisualState = ETileVisualState::Blocked; // Non-deletable tiles
+					}
+				}
+				// Leaving delete mode -> revert visuals
+				
+				Tile.VisualState = NewVisualState;
+				GridManagerRef->SetTileVisual(X, Y, NewVisualState);
+			}
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: DeleteMode: %s"), bDeleteModeEnabled ?
+			TEXT("Enabled") : TEXT("Disabled"));
+	}
 }
 
 void ATopDownPawn::ZoomCamera(const FInputActionValue& Value)

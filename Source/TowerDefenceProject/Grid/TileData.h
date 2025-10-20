@@ -5,11 +5,23 @@
 #include "TileData.generated.h"
 
 UENUM(BlueprintType)
-enum class ETileState : uint8
+enum class ETileVisualState : uint8
 {
-	Default, // Grey/white
-	Buildable, // Green
-	Occupied, // Red
+	Default,	// Normal color
+	Buildable,	// Green Highlight
+	Occupied,	// Red Highlight
+	Highlighted, // Yellow?
+	Blocked,	// 
+};
+
+UENUM(BlueprintType)
+enum class ETileOccupancyState : uint8
+{
+	Empty,
+	Building, // Might have something like this in the future?
+	Tower,
+	Path,
+	Blocked,
 };
 
 USTRUCT(BlueprintType)
@@ -17,6 +29,7 @@ struct FTileData
 {
 	GENERATED_BODY()
 
+	// --- Static Info ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector WorldLocation;
 
@@ -26,9 +39,39 @@ struct FTileData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 InstanceIndex = -1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsOccupied = false;
 
+	// --- Logical State ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ETileState TileState = ETileState::Default;
+	ETileOccupancyState Occupancy = ETileOccupancyState::Empty;
+
+	// Optional point for easy refence
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TWeakObjectPtr<AActor> OccupantActor;
+
+	// --- Visual State ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	ETileVisualState VisualState = ETileVisualState::Default;
+
+	// --- Helper Functions ---
+	bool IsBuildable() const
+	{
+		return Occupancy == ETileOccupancyState::Empty;
+	}
+
+	bool IsOccupied() const
+	{
+		return Occupancy != ETileOccupancyState::Empty && Occupancy != ETileOccupancyState::Blocked;
+	}
+
+	void SetOccupant(AActor* NewOccupant, ETileOccupancyState NewState)
+	{
+		OccupantActor = NewOccupant
+;		Occupancy = NewState;
+	}
+
+	void ClearOccupant()
+	{
+		OccupantActor = nullptr;
+		Occupancy = ETileOccupancyState::Empty;
+	}
 };

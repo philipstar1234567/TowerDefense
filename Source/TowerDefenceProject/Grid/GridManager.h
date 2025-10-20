@@ -34,7 +34,9 @@ public:
 	float TileSize;
 
 	UFUNCTION()
-	bool SetTileState(int32 X, int32 Y, ETileState NewState);
+	bool SetTileVisual(int32 X, int32 Y, ETileVisualState NewVisualState);
+	UFUNCTION()
+	bool SetTileOccupancy(int32 X, int32 Y, ETileOccupancyState NewOccupancy);
 
 	// HelperFunction
 	UFUNCTION(BlueprintCallable, Category = "Grid")

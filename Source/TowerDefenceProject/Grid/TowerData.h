@@ -9,9 +9,9 @@ struct FTowerData
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector2D GridLocation;
 
-	UPROPERTY()
-	AActor* TowerActor = nullptr; // Reference to the tower
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* TowerActor = nullptr;
 };

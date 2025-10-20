@@ -33,13 +33,24 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetBuildModeActive(bool bIsActive);
 
+	UFUNCTION(BlueprintCallable)
+	void SetDeleteModeActive(bool bIsActive);
+
+	UFUNCTION(BlueprintCallable)
+	bool IsBuildModeActive() const { return bBuildModeActive; }
+
+	UFUNCTION(BlueprintCallable)
+	bool IsDeleteModeActive() const { return bDeleteModeActive; }
+
 	UFUNCTION()
 	void OnPlayerRotating(bool bIsRotating);
 	
 	bool TryPlaceTower();
+	bool TryDeleteTower();
 
 	void UpdatePreview();
-	
+
+
 	// Setter funciton
 	void SetGridManager(AGridManager* InGridManager);
 
@@ -49,6 +60,7 @@ protected:
 
 private:
 	FVector2D LastHoveredTile = FVector2D(-1, -1);
-	bool BuildModeActive = false;
+	bool bBuildModeActive = false;
+	bool bDeleteModeActive = false;
 	bool bPlayerRotating = false;
 };

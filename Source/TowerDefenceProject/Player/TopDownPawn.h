@@ -77,6 +77,7 @@ protected:
 	bool bCameraInterpolationActive;
 	bool bGodViewEnabled;
 	bool bBuildModeEnabled;
+	bool bDeleteModeEnabled;
 	FVector2D ViewportCenter;
 
 	// Reference to GridManager
@@ -99,6 +100,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleBuildMode;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Inputs|Keyboard")
+	class UInputAction* IA_ToggleDeleteMode;
 
 	UPROPERTY(EditAnywhere, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleView;
@@ -128,6 +132,9 @@ private:
 
 	UFUNCTION()
 	void ToggleBuildMode();
+
+	UFUNCTION()
+	void ToggleDeleteMode();
 
 	UFUNCTION()
 	void ZoomCamera(const FInputActionValue& Value);

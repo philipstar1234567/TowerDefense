@@ -56,8 +56,8 @@ void AGridManager::GenerateGrid()
 			NewTile.WorldLocation = WorldLocation;
 			NewTile.GridLocation = GridLocation;
 			NewTile.InstanceIndex = -1;
-			NewTile.bIsOccupied = false;
-			NewTile.TileState = ETileState::Default; // for color in build mode
+			NewTile.Occupancy = ETileOccupancyState::Empty; // regarding gameplay logic for building
+			NewTile.VisualState = ETileVisualState::Default; // regarding color for visuals
 
 			TileGrid[X][Y] = NewTile;
 		}
@@ -85,15 +85,24 @@ void AGridManager::SpawnTileVisuals()
 	}
 }
 
-bool AGridManager::SetTileState(int32 X, int32 Y, ETileState NewState)
+bool AGridManager::SetTileVisual(int32 X, int32 Y, ETileVisualState NewVisualState)
 {
 	if (!TileGrid.IsValidIndex(X) || !TileGrid[X].IsValidIndex(Y))
 		return false;
 
 	FTileData& Tile = TileGrid[X][Y];
-	Tile.TileState = NewState;
+	Tile.VisualState = NewVisualState;
 
-	UpdateTileVisual(Tile); // Update ISMC Color
+	UpdateTileVisual(Tile); // Apply color
+	return true;
+}
+
+bool AGridManager::SetTileOccupancy(int32 X, int32 Y, ETileOccupancyState NewOccupancy)
+{
+	if (!TileGrid.IsValidIndex(X) || !TileGrid[X].IsValidIndex(Y))
+		return false;
+
+	TileGrid[X][Y].Occupancy = NewOccupancy;
 	return true;
 }
 
@@ -124,11 +133,22 @@ void AGridManager::UpdateTileVisual(const FTileData& Tile)
 	if (!TileMesh || Tile.InstanceIndex == -1) return;
 
 	FVector4 Color;
-	switch (Tile.TileState)
+	switch (Tile.VisualState)
 	{
-		case ETileState::Buildable: Color = FVector4(0.f, 1.f, 0.f, 1.f); break; // Green
-		case ETileState::Occupied: Color = FVector4(1.f, 0.f, 0.f, 1.f); break; // Red
-		default: Color = FVector4(1.f, 1.f, 1.f, 1.f); break; // White
+		case ETileVisualState::Buildable:
+			Color = FVector4(0.f, 1.f, 0.f, 1.f); // Green
+			break;
+		case ETileVisualState::Blocked:
+			Color = FVector4(0.5f, 0.5f, 0.5f, 1.f); // Grey
+			break;
+		case ETileVisualState::Occupied:
+			Color = FVector4(1.f, 0.f, 0.f, 1.f); // Red
+			break;
+		case ETileVisualState::Highlighted:
+			Color = FVector4(1.f, 1.f, 0.f, 1.f); // Yellow
+		default:
+			Color = FVector4(1.f, 1.f, 1.f, 1.f); // White
+			break; 
 	}
 
 	TileMesh->SetCustomDataValue(Tile.InstanceIndex, 0, Color.X); // R
