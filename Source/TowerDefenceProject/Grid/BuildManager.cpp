@@ -5,29 +5,35 @@
 ABuildManager::ABuildManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	CurrentMode = EGameMode::None;
 }
 
-void ABuildManager::SetBuildModeActive(bool bIsActive)
+void ABuildManager::SetMode(EGameMode NewMode)
 {
-	// Enfore exclusivity
-	if (bIsActive && bDeleteModeActive)
+	if (NewMode == CurrentMode) return;
+
+	// Clean prev mode
+	if (TowerPreviewInstance)
 	{
-		SetDeleteModeActive(false);
+		TowerPreviewInstance->Destroy();
+		TowerPreviewInstance = nullptr;
+		UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower preview destroyed."));
 	}
 
-	bBuildModeActive = bIsActive;
+	LastHoveredTile = FVector2D(-1, -1);
 
-	if (bIsActive)
+	CurrentMode = NewMode;
+
+	if (CurrentMode == EGameMode::Build)
 	{
-		// Choose the selected tower class (fallback to default placeholder)
+		// Choose the selected tower class (fallback to default)
 		if (!SelectedTowerClass)
 			SelectedTowerClass = DefaultTowerClass;
 
-		if (!TowerPreviewInstance && SelectedTowerClass)
+		if (SelectedTowerClass)
 		{
 			FActorSpawnParameters Params;
 			Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
 			TowerPreviewInstance = GetWorld()->SpawnActor<AActor>(
 				SelectedTowerClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
 
@@ -39,58 +45,54 @@ void ABuildManager::SetBuildModeActive(bool bIsActive)
 			}
 		}
 	}
-	else
-	{
-		if (TowerPreviewInstance)
-		{
-			TowerPreviewInstance->Destroy();
-			TowerPreviewInstance = nullptr;
-			UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower preview destroyed."));
-		}
-	}
 
-	LastHoveredTile = FVector2D(-1, -1);
-	UE_LOG(LogTemp, Log, TEXT("BuildManager: Build Mode set to %s"), bIsActive ?
-		TEXT("Active") : TEXT("Inactive"));
+	UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower preview spawned."));
 }
 
-void ABuildManager::SetDeleteModeActive(bool bIsActive)
+ETileVisualState ABuildManager::GetVisualStateForTile(const FTileData& Tile, bool bIsHovered) const
 {
-	// Enforce exclusivity
-	if (bIsActive && bBuildModeActive)
+	if (bIsHovered && ((CurrentMode == EGameMode::Build && Tile.Occupancy == ETileOccupancyState::Empty) ||
+		(CurrentMode == EGameMode::Delete && Tile.Occupancy == ETileOccupancyState::Tower)))
 	{
-		SetBuildModeActive(false); // destroy previuw
+		return ETileVisualState::Highlighted;
 	}
 
-	bDeleteModeActive = bIsActive;
+	if (CurrentMode == EGameMode::Build)
+	{
+		if (Tile.Occupancy == ETileOccupancyState::Empty) return ETileVisualState::Buildable;
+		if (Tile.Occupancy == ETileOccupancyState::Tower) return ETileVisualState::Occupied;
+		if (Tile.Occupancy == ETileOccupancyState::Path) return ETileVisualState::Blocked;
+	}
+	else if (CurrentMode == EGameMode::Delete)
+	{
+		if (Tile.Occupancy == ETileOccupancyState::Tower) return ETileVisualState::Occupied;
+		return ETileVisualState::Blocked;
+	}
 
-	//reset hover
-	LastHoveredTile = FVector2D(-1, -1);
-	
-	UE_LOG(LogTemp, Log, TEXT("BuildManager: Delete Mode set to %s"), bIsActive ?
-		TEXT("Active") : TEXT("InActive"));
+	return ETileVisualState::Default;
 }
 
 void ABuildManager::OnPlayerRotating(bool bIsRotating)
 {
 	bPlayerRotating = bIsRotating;
-
 	if (TowerPreviewInstance)
-	{
-		SetActorHiddenInGame(bIsRotating);
-	}
+		TowerPreviewInstance->SetActorHiddenInGame(bIsRotating);
 }
 
 void ABuildManager::UpdatePreview()
 {
-	if(!GridManager)
-	{ 
+	if (!GridManager)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("BuildManager: Missing GridManager!"));
 		return;
 	}
 
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
-	if (!PC) return;
+	if (!PC)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuildManager: UpdatePreview failed - PlayerController is null"))
+		return;
+	}
 
 	FHitResult HitResult;
 	if (PC->GetHitResultUnderCursor(ECC_Visibility, false, HitResult))
@@ -101,60 +103,40 @@ void ABuildManager::UpdatePreview()
 			// Reset prev hover if changed
 			if (GridCoords != LastHoveredTile && LastHoveredTile.X >= 0 && LastHoveredTile.Y >= 0)
 			{
-				FTileData& PrevTile = GridManager->TileGrid[LastHoveredTile.X][LastHoveredTile.Y];
-
-
-				// Reset to base visual (based on mode and occupancy)
-				ETileVisualState BaseState = PrevTile.VisualState; // Already set by mode toggle
-
-				if (PrevTile.VisualState == ETileVisualState::Highlighted)
+				FTileData PrevTile;
+				if (GridManager->GetTileSafe(LastHoveredTile.X, LastHoveredTile.Y, PrevTile))
 				{
-					if (bBuildModeActive)
+					ETileVisualState BaseState = GetVisualStateForTile(PrevTile, false);
+					if (PrevTile.VisualState == ETileVisualState::Highlighted)
 					{
-						BaseState = (PrevTile.Occupancy == ETileOccupancyState::Empty) ? 
-							ETileVisualState::Buildable : ETileVisualState::Occupied;
+						GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, BaseState);
 					}
-					else if (bDeleteModeActive)
-					{
-						BaseState = (PrevTile.Occupancy == ETileOccupancyState::Tower) ?
-							ETileVisualState::Occupied : ETileVisualState::Blocked;
-					}
-					GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, BaseState);
 				}
 			}
 
 			LastHoveredTile = GridCoords;
+			FTileData Tile;
+			if (GridManager->GetTileSafe(GridCoords.X, GridCoords.Y, Tile))
+			{
+				bool bCanHighlight = (CurrentMode == EGameMode::Build && Tile.Occupancy == ETileOccupancyState::Empty) ||
+					(CurrentMode == EGameMode::Delete && Tile.Occupancy == ETileOccupancyState::Tower);
 
-			const FTileData& Tile = GridManager->TileGrid[GridCoords.X][GridCoords.Y];
-			
-			// Hover highlight if valid for mode
-			bool bCanHighlight = false;
-			if (bBuildModeActive && Tile.Occupancy == ETileOccupancyState::Empty)
-			{
-				bCanHighlight = true;
-			}
-			else if (bDeleteModeActive && Tile.Occupancy == ETileOccupancyState::Tower)
-			{
-				bCanHighlight = true;
-			}
+				if (bCanHighlight)
+				{
+					GridManager->SetTileVisual(GridCoords.X, GridCoords.Y, GetVisualStateForTile(Tile, true));
+				}
 
-			if (bCanHighlight)
-			{
-				GridManager->SetTileVisual(GridCoords.X, GridCoords.Y, ETileVisualState::Highlighted); // Hover feedback (i should not have implemented this, took to much time, well well)
+				if (CurrentMode == EGameMode::Build && TowerPreviewInstance && Tile.Occupancy == ETileOccupancyState::Empty)
+				{
+					FVector NewLocation = Tile.WorldLocation + FVector(0.f, 0.f, 5.f);
+					TowerPreviewInstance->SetActorLocation(NewLocation);
+					TowerPreviewInstance->SetActorHiddenInGame(false);
+				}
+				else if (TowerPreviewInstance)
+				{
+					TowerPreviewInstance->SetActorHiddenInGame(true);
+				}
 			}
-
-			// Update prev actor (build mode VIP)
-			if (bBuildModeActive && TowerPreviewInstance)
-			{
-				FVector NewLocation = Tile.WorldLocation + FVector(0.f, 0.f, 5.f); // Slightly above ground
-				TowerPreviewInstance->SetActorLocation(NewLocation);
-				TowerPreviewInstance->SetActorHiddenInGame(false);
-			}
-			else if (TowerPreviewInstance)
-			{
-				TowerPreviewInstance->SetActorHiddenInGame(true);
-			}
-
 			return;
 		}
 	}
@@ -162,27 +144,18 @@ void ABuildManager::UpdatePreview()
 	// Outside Grid: reset hover highlight
 	if (LastHoveredTile.X >= 0 && LastHoveredTile.Y >= 0)
 	{
-		FTileData& PrevTile = GridManager->TileGrid[LastHoveredTile.X][LastHoveredTile.Y];
-		ETileVisualState BaseState = PrevTile.VisualState;
-
-		if (PrevTile.VisualState == ETileVisualState::Highlighted)
+		FTileData PrevTile;
+		if (GridManager->GetTileSafe(LastHoveredTile.X, LastHoveredTile.Y, PrevTile))
 		{
-			if (bBuildModeActive)
+			ETileVisualState BaseState = GetVisualStateForTile(PrevTile, false);
+			if (PrevTile.VisualState == ETileVisualState::Highlighted)
 			{
-				BaseState = (PrevTile.Occupancy == ETileOccupancyState::Empty) ?
-					ETileVisualState::Buildable : ETileVisualState::Occupied;
+				GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, BaseState);
 			}
-			else if (bDeleteModeActive)
-			{
-				BaseState = (PrevTile.Occupancy == ETileOccupancyState::Tower) ?
-					ETileVisualState::Occupied : ETileVisualState::Blocked;
-			}
-			GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, BaseState);
 		}
 	}
 
 	LastHoveredTile = FVector2D(-1, -1);
-
 	if (TowerPreviewInstance)
 	{
 		TowerPreviewInstance->SetActorHiddenInGame(true);
@@ -194,17 +167,17 @@ bool ABuildManager::TryPlaceTower()
 	if (!GridManager || LastHoveredTile.X < 0 || LastHoveredTile.Y < 0)
 		return false;
 
-	FTileData& Tile = GridManager->TileGrid[LastHoveredTile.X][LastHoveredTile.Y];
+	FTileData Tile;
+	if (!GridManager->GetTileSafe(LastHoveredTile.X, LastHoveredTile.Y, Tile))
+		return false;
 
-
-	// Check if tile is buildable
 	if (Tile.Occupancy != ETileOccupancyState::Empty)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BuildManager: Tile at X=%d, Y=%d is not empty!"), (int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
+		UE_LOG(LogTemp, Warning, TEXT("BuildManager: Tile at X=%d, Y=%d is not empty!"),
+			(int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
 		return false;
 	}
-	
-	// Check for selected tower class
+
 	if (!SelectedTowerClass)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BuildManager: No selected tower class!"));
@@ -215,7 +188,6 @@ bool ABuildManager::TryPlaceTower()
 	FVector SpawnLocation = Tile.WorldLocation + FVector(0, 0, 5.0f);
 	FRotator SpawnRotation = FRotator::ZeroRotator;
 	FActorSpawnParameters SpawnParams;
-
 	AActor* SpawnedTower = GetWorld()->SpawnActor<AActor>(SelectedTowerClass, SpawnLocation, SpawnRotation, SpawnParams);
 
 	if (!SpawnedTower)
@@ -224,19 +196,24 @@ bool ABuildManager::TryPlaceTower()
 		return false;
 	}
 
-
 	// --- Save info ---
 	FTowerData NewTower;
 	NewTower.GridLocation = LastHoveredTile;
 	NewTower.TowerActor = SpawnedTower;
 	PlacedTowers.Add(NewTower);
 
+	// --- Update Tile in Grid ---
+	GridManager->SetTileOccupancy(LastHoveredTile.X, LastHoveredTile.Y, ETileOccupancyState::Tower);
 
-	// --- Update Tile Logic ---
-	Tile.Occupancy = ETileOccupancyState::Tower;
-	GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, ETileVisualState::Occupied);
+	// Re-fetch updated tile for visual calc
+	FTileData UpdatedTile;
+	if (GridManager->GetTileSafe(LastHoveredTile.X, LastHoveredTile.Y, UpdatedTile))
+	{
+		GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, GetVisualStateForTile(UpdatedTile, false));
+	}
 
-	UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower placed at X=%d, Y=%d"), (int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
+	UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower placed at X=%d, Y=%d"),
+		(int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
 	return true;
 }
 
@@ -245,50 +222,46 @@ bool ABuildManager::TryDeleteTower()
 	if (!GridManager || LastHoveredTile.X < 0 || LastHoveredTile.Y < 0)
 		return false;
 
-	FTileData& Tile = GridManager->TileGrid[LastHoveredTile.X][LastHoveredTile.Y];
+	FTileData Tile;
+	if (!GridManager->GetTileSafe(LastHoveredTile.X, LastHoveredTile.Y, Tile))
+		return false;
 
-	// Check if tile has a tower
 	if (Tile.Occupancy != ETileOccupancyState::Tower)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BuildManager: No tower to delete at tile X=%d, Y=%d"), (int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
+		UE_LOG(LogTemp, Warning, TEXT("BuildManager: No tower to delete at tile X=%d, Y=%d"),
+			(int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
 		return false;
 	}
 
-	// Find the tower in PlacedTowers
 	for (int32 i = 0; i < PlacedTowers.Num(); ++i)
 	{
 		if (PlacedTowers[i].GridLocation == LastHoveredTile)
 		{
-			// Destroy the tower actor
 			AActor* Tower = PlacedTowers[i].TowerActor;
 			if (Tower)
 			{
 				Tower->Destroy();
 			}
-
 			PlacedTowers.RemoveAt(i);
 
-			// Update Tile State
-			Tile.Occupancy = ETileOccupancyState::Empty;
+			// --- Update Tile in Grid ---
+			GridManager->SetTileOccupancy(LastHoveredTile.X, LastHoveredTile.Y, ETileOccupancyState::Empty);
 
-			// Set Visual based on CURRENT mode (doesnt really matter)
-			ETileVisualState NewVisualState = ETileVisualState::Default;
-			if (bBuildModeActive)
+			// Re-fetch updated tile for visual calc
+			FTileData UpdatedTile;
+			if (GridManager->GetTileSafe(LastHoveredTile.X, LastHoveredTile.Y, UpdatedTile))
 			{
-				NewVisualState = ETileVisualState::Buildable;
+				GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, GetVisualStateForTile(UpdatedTile, false));
 			}
-			else if (bDeleteModeActive)
-			{
-				NewVisualState = ETileVisualState::Blocked;
-			}
-			GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, NewVisualState);
-
-			UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower deleted at X=%d, Y=%d"), (int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
+			
+			UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower deleted at X=%d, Y=%d"),
+				(int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
 			return true;
 		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("BuildManager: Tower data not found for deletion at X=%d, Y=%d!"), (int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
+	UE_LOG(LogTemp, Warning, TEXT("BuildManager: Tower data not found for deletion at X=%d, Y=%d!"),
+		(int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
 	return false;
 }
 
@@ -306,7 +279,7 @@ void ABuildManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (GridManager && (bBuildModeActive || bDeleteModeActive) && !bPlayerRotating)
+	if (GridManager && CurrentMode != EGameMode::None && !bPlayerRotating)
 	{
 		UpdatePreview();
 	}

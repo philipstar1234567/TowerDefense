@@ -1,12 +1,11 @@
 
 #include "Player/TopDownPawn.h"
 
-// Constructor
 ATopDownPawn::ATopDownPawn()
 {
 	// Initialize Components
 	DefaultSceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
-	RootComponent = DefaultSceneRoot; // Set as root
+	RootComponent = DefaultSceneRoot;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(RootComponent);
@@ -20,7 +19,7 @@ ATopDownPawn::ATopDownPawn()
 	FloatingPawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingPawnMovement"));
 	FloatingPawnMovement->MaxSpeed = 1200.0f; // Can add this into a settings for movementspeed
 
-	// Initialize Variables - Defaults
+	// Initialize Variables
 	ZoomSpeed = 100.0f;
 	ZoomLevel = 0.0f;
 	YawRotationSpeed = 2.0f; // Value limit 1 - 10
@@ -29,11 +28,9 @@ ATopDownPawn::ATopDownPawn()
 	bCameraRotationActive = false;
 	bCameraInterpolationActive = false;
 	bGodViewEnabled = false;
-	bBuildModeEnabled = false;
-	bDeleteModeEnabled = false;
+	CurrentMode = EGameMode::None;
 	bInvertedScrollDirection = true;
 
-	// default thingy, dont know if needed
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -50,17 +47,16 @@ void ATopDownPawn::BeginPlay()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 		GridManagerRef = GetWorld()->SpawnActor<AGridManager>(
-			GridManagerClass, SpawnLocation, SpawnRotation, SpawnParams
-		);
+			GridManagerClass, SpawnLocation, SpawnRotation, SpawnParams);
 
 		if (!GridManagerRef)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to spawn GridManager!"));
+			UE_LOG(LogTemp, Error, TEXT("TopDownPawn: Failed to spawn GridManager!"));
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GridManagerClass is not set in TopDownPawn!"));
+		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: GridManagerClass is not set!"));
 	}
 
 	// Spawn BuildManager
@@ -72,24 +68,23 @@ void ATopDownPawn::BeginPlay()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 		BuildManagerRef = GetWorld()->SpawnActor<ABuildManager>(
-			BuildManagerClass, SpawnLocation, SpawnRotation, SpawnParams
-		);
-
+			BuildManagerClass, SpawnLocation, SpawnRotation, SpawnParams);
+		
 		if (!BuildManagerRef)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to spawn BuildManager!"));
+			UE_LOG(LogTemp, Error, TEXT("TopDownPawn: Failed to spawn BuildManager!"));
 		}
 	}
 
 	if (BuildManagerRef && GridManagerRef)
 	{
-		BuildManagerRef->SetGridManager(GridManagerRef); // Giving the reference
+		BuildManagerRef->SetGridManager(GridManagerRef); // Gives a reference
 	}
 
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (PC)
 	{
-		// just getting the center of the viewport for later
+		// just getting the center of the viewport for later - might be used
 		int32 ViewportX, ViewportY;
 		PC->GetViewportSize(ViewportX, ViewportY);
 		ViewportCenter = FVector2D(ViewportX / 2, ViewportY / 2);
@@ -111,7 +106,6 @@ void ATopDownPawn::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: PlayerController not found!"));
-		return;
 	}
 }
 
@@ -119,21 +113,16 @@ void ATopDownPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Camera interpolation logic
 	if (bCameraInterpolationActive && SpringArm)
 	{
-		// Get current rotation
 		FRotator CurrentRot = SpringArm->GetRelativeRotation();
 		FRotator TargetRot(TargetPitch, CurrentRot.Yaw, CurrentRot.Roll);
-
-		// Interpolate rotation
 		FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 9.f);
 		SpringArm->SetRelativeRotation(NewRot);
 
-		// stop interpolation and snap to target if close enough
 		if (FMath::IsNearlyEqual(NewRot.Pitch, TargetPitch, 0.05f))
 		{
-			SpringArm->SetRelativeRotation(TargetRot); // snap exactly
+			SpringArm->SetRelativeRotation(TargetRot);
 			bCameraInterpolationActive = false;
 		}
 	}
@@ -170,34 +159,39 @@ void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void ATopDownPawn::OnLeftMousePressed()
 {
-	UE_LOG(LogTemp, Log, TEXT("Left Mouse Pressed"));
+	UE_LOG(LogTemp, Log, TEXT("TopDownPawn: Left Mouse Pressed"));
 	if (!BuildManagerRef)
+	{
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: BuildManagerRef is null!"));
 		return;
-
-	if (BuildManagerRef->IsBuildModeActive())
-	{
-		BuildManagerRef->TryPlaceTower();
-		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: TryPlaceTower"))
 	}
-	else if (BuildManagerRef->IsDeleteModeActive())
+
+	if (CurrentMode == EGameMode::Build)
 	{
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: Attempting TryPlaceTower"));
+		BuildManagerRef->TryPlaceTower();
+	}
+	else if (CurrentMode == EGameMode::Delete)
+	{
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: Attempting TryDeleteTower"));
 		BuildManagerRef->TryDeleteTower();
-		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: TryDeleteTower"))
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: No mode active"));
 	}
 }
 
 void ATopDownPawn::OnRightMousePressed()
 {
-	if (!bCameraInterpolationActive)
+	if (!bCameraInterpolationActive) // Cant rotate when lerping
 	{
 		bCameraRotationActive = true;
 
 		if (APlayerController* PC = Cast<APlayerController>(GetController()))
 		{
 			PC->bShowMouseCursor = false;
-
 			BuildManagerRef->OnPlayerRotating(true);
-
 			FInputModeGameOnly InputMode;
 			PC->SetInputMode(InputMode);
 		}
@@ -210,13 +204,11 @@ void ATopDownPawn::OnRightMouseReleased()
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		// Reset mouse to center
+		// Reset mouse to center?
 		//PC->SetMouseLocation(ViewportCenter.X, ViewportCenter.Y);
 
 		PC->bShowMouseCursor = true;
-
 		BuildManagerRef->OnPlayerRotating(false);
-
 		FInputModeGameAndUI InputMode;
 		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 		PC->SetInputMode(InputMode);
@@ -226,22 +218,14 @@ void ATopDownPawn::OnRightMouseReleased()
 void ATopDownPawn::Move(const FInputActionValue& Value)
 {
 	FVector2D Input = Value.Get<FVector2D>();
-
-	// Cancel input if it's neutral or balanced
-	if (FMath::IsNearlyZero(Input.X) && FMath::IsNearlyZero(Input.Y))
-		return;
+	if (FMath::IsNearlyZero(Input.X) && FMath::IsNearlyZero(Input.Y)) return;
 	
 	// Get the SpringArm rotation to orient movement with the camera
 	FRotator CameraRotation = SpringArm->GetComponentRotation();
 	FRotator YawRotation(0.f, CameraRotation.Yaw, 0.f); // Only yaw affects movement
-
-	// Create forward and right vectors
 	FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	FVector Right = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-	// Combine into world direction
 	FVector MoveDirection = (Forward * Input.Y + Right * Input.X).GetSafeNormal();
-
 	AddMovementInput(MoveDirection, 1.0f);
 }
 
@@ -250,25 +234,18 @@ void ATopDownPawn::RotateCamera(const FInputActionValue& Value)
 	if (!bCameraRotationActive || !SpringArm)
 		return;
 
-	// Calculate new yaw
 	float DeltaX = Value.Get<float>();
-
 	FRotator CurrentRot = SpringArm->GetRelativeRotation();
-
 	float NewYaw = CurrentRot.Yaw + DeltaX * YawRotationSpeed;
 	NewYaw = FRotator::NormalizeAxis(NewYaw);
-
 	FRotator NewRot(CurrentRot.Pitch, NewYaw, CurrentRot.Roll);
-
 	SpringArm->SetRelativeRotation(NewRot);
 }
 
 void ATopDownPawn::ToggleView()
 {
 	if (bCameraRotationActive)
-	{
 		bCameraRotationActive = false;
-	}
 
 	if (!bCameraInterpolationActive)
 	{
@@ -279,113 +256,44 @@ void ATopDownPawn::ToggleView()
 	}
 }
 
-void ATopDownPawn::ToggleBuildMode()
+void ATopDownPawn::ToggleMode(EGameMode NewMode)
 {
-	bBuildModeEnabled = !bBuildModeEnabled;
-
-	// ensure mutual exclusivity
-	if (bBuildModeEnabled && bDeleteModeEnabled)
-	{
-		bDeleteModeEnabled = false;
-		if (BuildManagerRef)
-		{
-			BuildManagerRef->SetDeleteModeActive(false);
-		}
-	}
+	if (CurrentMode == NewMode)
+		CurrentMode = EGameMode::None; // Toggle off
+	else
+		CurrentMode = NewMode;
 
 	if (BuildManagerRef)
-	{
-		BuildManagerRef->SetBuildModeActive(bBuildModeEnabled);
-	}
+		BuildManagerRef->SetMode(CurrentMode);
 
-	if (GridManagerRef)
+	if (GridManagerRef && BuildManagerRef)
 	{
 		for (int32 X = 0; X < GridManagerRef->GridWidth; ++X)
 		{
 			for (int32 Y = 0; Y < GridManagerRef->GridHeight; ++Y)
 			{
 				FTileData& Tile = GridManagerRef->TileGrid[X][Y];
-
-				// Determine the new visual state
-				ETileVisualState NewVisualState = ETileVisualState::Default;
-
-				if (bBuildModeEnabled)
-				{
-					// If the tile is empty, make it green (buildable)
-					if (Tile.Occupancy == ETileOccupancyState::Empty)
-					{
-						NewVisualState = ETileVisualState::Buildable;
-					}
-					else if (Tile.Occupancy == ETileOccupancyState::Tower)
-					{
-						NewVisualState = ETileVisualState::Occupied;
-					}
-					else if (Tile.Occupancy == ETileOccupancyState::Path)
-					{
-						NewVisualState = ETileVisualState::Blocked;
-					}
-				}
-				
+				ETileVisualState NewVisualState = BuildManagerRef->GetVisualStateForTile(Tile, false);
 				Tile.VisualState = NewVisualState;
 				GridManagerRef->SetTileVisual(X, Y, NewVisualState);
 			}
 		}
-
-		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: BuildMode: %s"), bBuildModeEnabled ?
-			TEXT("Enabled") : TEXT("Disabled"));
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("TopDownView: Mode set to %s"),
+		*UEnum::GetValueAsString(CurrentMode));
+}
+
+void ATopDownPawn::ToggleBuildMode()
+{
+	ToggleMode(EGameMode::Build);
+	UE_LOG(LogTemp, Log, TEXT("TopDownPawn: ToggleBuildMode called"))
 }
 
 void ATopDownPawn::ToggleDeleteMode()
 {
-	bDeleteModeEnabled = !bDeleteModeEnabled;
-
-	// Ensure modes are mutually exclusive (disable build if enabling delete)
-	if (bDeleteModeEnabled && bBuildModeEnabled)
-	{
-		bBuildModeEnabled = false;
-		if (BuildManagerRef)
-		{
-			BuildManagerRef->SetBuildModeActive(false);
-		}
-	}
-
-	if (BuildManagerRef)
-	{
-		BuildManagerRef->SetDeleteModeActive(bDeleteModeEnabled);
-	}
-
-	if (GridManagerRef)
-	{
-		for (int32 X = 0; X < GridManagerRef->GridWidth; ++X)
-		{
-			for (int32 Y = 0; Y < GridManagerRef->GridHeight; ++Y)
-			{
-				FTileData& Tile = GridManagerRef->TileGrid[X][Y];
-
-				ETileVisualState NewVisualState = ETileVisualState::Default;
-
-				if (bDeleteModeEnabled)
-				{
-					if (Tile.Occupancy == ETileOccupancyState::Tower)
-					{
-						NewVisualState = ETileVisualState::Occupied; // Deletable tiles
-					}
-					else
-					{
-						NewVisualState = ETileVisualState::Blocked; // Non-deletable tiles
-					}
-				}
-				// Leaving delete mode -> revert visuals
-				
-				Tile.VisualState = NewVisualState;
-				GridManagerRef->SetTileVisual(X, Y, NewVisualState);
-			}
-		}
-
-		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: DeleteMode: %s"), bDeleteModeEnabled ?
-			TEXT("Enabled") : TEXT("Disabled"));
-	}
+	ToggleMode(EGameMode::Delete);
+	UE_LOG(LogTemp, Log, TEXT("TopDownPawn: ToggleDeleteMode called"))
 }
 
 void ATopDownPawn::ZoomCamera(const FInputActionValue& Value)
@@ -394,16 +302,10 @@ void ATopDownPawn::ZoomCamera(const FInputActionValue& Value)
 		return;
 
 	float InputValue = Value.Get<float>();
-
 	if (bInvertedScrollDirection)
 		InputValue = InputValue * -1;
 
-	// Adjust Zoom
 	ZoomLevel += InputValue * ZoomSpeed;
-
-	// Clamp Zoom
 	ZoomLevel = FMath::Clamp(ZoomLevel, 0, 1500);
-
-	// Apply Zoom to SpringArm
 	SpringArm->TargetArmLength = ZoomLevel;
 }

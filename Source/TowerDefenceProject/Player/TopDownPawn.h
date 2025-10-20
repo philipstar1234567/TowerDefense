@@ -20,10 +20,7 @@ class TOWERDEFENCEPROJECT_API ATopDownPawn : public APawn
 	GENERATED_BODY()
 
 public:
-	// Constuctor
 	ATopDownPawn();
-
-	// Bind Inputs
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -53,6 +50,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	ABuildManager* BuildManagerRef;
+
 	// Public Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ZoomSpeed;
@@ -67,20 +65,18 @@ public:
 	bool bInvertedScrollDirection;
 
 protected:
-	// Default functions
 	virtual void Tick(float DeltaTime) override;
 
-	// private Variables
+	// Private Variables
 	float ZoomLevel;
 	float TargetPitch;
 	bool bCameraRotationActive;
 	bool bCameraInterpolationActive;
 	bool bGodViewEnabled;
-	bool bBuildModeEnabled;
-	bool bDeleteModeEnabled;
 	FVector2D ViewportCenter;
 
-	// Reference to GridManager
+	UPROPERTY(BlueprintReadOnly, Category = "Mode")
+	EGameMode CurrentMode = EGameMode::None;
 
 	// Input Mapping Context and Input Actions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -110,7 +106,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input|Mouse")
 	class UInputAction* IA_Zoom;
 
-
 private:
 	UFUNCTION()
 	void OnLeftMousePressed();
@@ -131,6 +126,9 @@ private:
 	void ToggleView();
 
 	UFUNCTION()
+	void ToggleMode(EGameMode NewMode);
+
+	UFUNCTION()
 	void ToggleBuildMode();
 
 	UFUNCTION()
@@ -138,5 +136,4 @@ private:
 
 	UFUNCTION()
 	void ZoomCamera(const FInputActionValue& Value);
-
 };

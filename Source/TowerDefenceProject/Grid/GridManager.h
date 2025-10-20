@@ -3,7 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "TileData.h"
+#include "Grid/TileData.h"
 #include "Components/InstancedStaticMeshComponent.h"
 #include "GridManager.generated.h"
 
@@ -13,7 +13,6 @@ class TOWERDEFENCEPROJECT_API AGridManager : public AActor
 	GENERATED_BODY()
 	
 public:
-	// Constructor
 	AGridManager();
 
 	// Components
@@ -33,21 +32,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
 	float TileSize;
 
+	// HelperFunction
+
 	UFUNCTION()
 	bool SetTileVisual(int32 X, int32 Y, ETileVisualState NewVisualState);
+
 	UFUNCTION()
 	bool SetTileOccupancy(int32 X, int32 Y, ETileOccupancyState NewOccupancy);
 
-	// HelperFunction
 	UFUNCTION(BlueprintCallable, Category = "Grid")
 	bool WorldToGrid(const FVector& WorldLocation, FVector2D& OutGridCoords) const;
+
+	UFUNCTION(BlueprintCallable)
+	bool GetTileSafe(int32 X, int32 Y, FTileData& OutTile) const;
 
 	// GridArray
 	TArray<TArray<FTileData>> TileGrid;
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
 
 private:
 

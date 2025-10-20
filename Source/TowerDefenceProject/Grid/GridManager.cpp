@@ -34,11 +34,6 @@ void AGridManager::BeginPlay()
 	SpawnTileVisuals();
 }
 
-void AGridManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
 void AGridManager::GenerateGrid()
 {
@@ -128,6 +123,17 @@ bool AGridManager::WorldToGrid(const FVector& WorldLocation, FVector2D& OutGridC
 	return true;
 }
 
+bool AGridManager::GetTileSafe(int32 X, int32 Y, FTileData& OutTile) const
+{
+	if (TileGrid.IsValidIndex(X) && TileGrid[X].IsValidIndex(Y))
+	{
+		OutTile = TileGrid[X][Y];
+		return true;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("GridManager: Invaldig tile access at X=%d, Y=%d"), X, Y);
+	return false;
+}
+
 void AGridManager::UpdateTileVisual(const FTileData& Tile)
 {
 	if (!TileMesh || Tile.InstanceIndex == -1) return;
@@ -145,7 +151,7 @@ void AGridManager::UpdateTileVisual(const FTileData& Tile)
 			Color = FVector4(1.f, 0.f, 0.f, 1.f); // Red
 			break;
 		case ETileVisualState::Highlighted:
-			Color = FVector4(1.f, 1.f, 0.f, 1.f); // Yellow
+			Color = FVector4(1.f, 0.6f, 0.f, 1.f); // Yellow
 		default:
 			Color = FVector4(1.f, 1.f, 1.f, 1.f); // White
 			break; 

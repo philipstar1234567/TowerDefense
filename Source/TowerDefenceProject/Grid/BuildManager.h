@@ -7,6 +7,14 @@
 #include "TowerData.h"
 #include "BuildManager.generated.h"
 
+UENUM(BlueprintType)
+enum class EGameMode : uint8
+{
+	None,
+	Build,
+	Delete
+};
+
 UCLASS()
 class TOWERDEFENCEPROJECT_API ABuildManager : public AActor
 {
@@ -29,18 +37,21 @@ public:
 
 	UPROPERTY()
 	TArray<FTowerData> PlacedTowers;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Mode")
+	EGameMode CurrentMode = EGameMode::None;
 	
 	UFUNCTION(BlueprintCallable)
-	void SetBuildModeActive(bool bIsActive);
+	void SetMode(EGameMode NewMode);
 
 	UFUNCTION(BlueprintCallable)
-	void SetDeleteModeActive(bool bIsActive);
+	bool IsBuildModeActive() const { return CurrentMode == EGameMode::Build; }
 
 	UFUNCTION(BlueprintCallable)
-	bool IsBuildModeActive() const { return bBuildModeActive; }
+	bool IsDeleteModeActive() const { return CurrentMode == EGameMode::Delete; }
 
 	UFUNCTION(BlueprintCallable)
-	bool IsDeleteModeActive() const { return bDeleteModeActive; }
+	ETileVisualState GetVisualStateForTile(const FTileData& Tile, bool bIsHovered) const;
 
 	UFUNCTION()
 	void OnPlayerRotating(bool bIsRotating);
@@ -49,7 +60,6 @@ public:
 	bool TryDeleteTower();
 
 	void UpdatePreview();
-
 
 	// Setter funciton
 	void SetGridManager(AGridManager* InGridManager);
@@ -60,7 +70,5 @@ protected:
 
 private:
 	FVector2D LastHoveredTile = FVector2D(-1, -1);
-	bool bBuildModeActive = false;
-	bool bDeleteModeActive = false;
 	bool bPlayerRotating = false;
 };
