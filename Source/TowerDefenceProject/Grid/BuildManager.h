@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Grid/GridManager.h"
+#include "Player/PlayerResourceState.h"
 #include "TowerData.h"
 #include "BuildManager.generated.h"
 
@@ -41,6 +42,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Mode")
 	EGameMode CurrentMode = EGameMode::None;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building|Economy")
+	int32 TowerCost = 100; // Can override
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building|Economy")
+	float RefundPercentage = 0.7f; // 70%?
+
 	UFUNCTION(BlueprintCallable)
 	void SetMode(EGameMode NewMode);
 
@@ -63,6 +70,8 @@ public:
 
 	// Setter funciton
 	void SetGridManager(AGridManager* InGridManager);
+	UFUNCTION()
+	void SetPlayerResourceState(APlayerResourceState* InPlayerResource);
 
 protected:
 	virtual void BeginPlay() override;
@@ -71,4 +80,8 @@ protected:
 private:
 	FVector2D LastHoveredTile = FVector2D(-1, -1);
 	bool bPlayerRotating = false;
+
+	// Reference to players resource state for gold operations
+	UPROPERTY()
+	APlayerResourceState* PlayerResource = nullptr;
 };

@@ -184,6 +184,15 @@ bool ABuildManager::TryPlaceTower()
 		return false;
 	}
 
+	// --- Check and Spend gold ---
+	if (!PlayerResource || !PlayerResource->SpendGold(TowerCost))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuildManager: Not enough gold to place tower! Current gold: %d, Cost: %d"),
+			PlayerResource ? PlayerResource->GetGoldAmount() : 0, TowerCost);
+		// Add UI notify here if needed in future
+		return false;
+	}
+
 	// --- Spawn Tower ---
 	FVector SpawnLocation = Tile.WorldLocation + FVector(0, 0, 5.0f);
 	FRotator SpawnRotation = FRotator::ZeroRotator;
@@ -193,6 +202,11 @@ bool ABuildManager::TryPlaceTower()
 	if (!SpawnedTower)
 	{
 		UE_LOG(LogTemp, Error, TEXT("BuildManager: Failed to spawn tower!"));
+
+		// refund gold
+		if (PlayerResource)
+			PlayerResource->AddGold(TowerCost);
+
 		return false;
 	}
 
@@ -200,6 +214,7 @@ bool ABuildManager::TryPlaceTower()
 	FTowerData NewTower;
 	NewTower.GridLocation = LastHoveredTile;
 	NewTower.TowerActor = SpawnedTower;
+	NewTower.Cost = TowerCost;
 	PlacedTowers.Add(NewTower);
 
 	// --- Update Tile in Grid ---
@@ -242,6 +257,16 @@ bool ABuildManager::TryDeleteTower()
 			{
 				Tower->Destroy();
 			}
+
+			// Calc & add refund
+			int32 Refund = FMath::RoundToInt(static_cast<float>(PlacedTowers[i].Cost) * RefundPercentage); // i think this works, might be the error u are looking for
+			if (PlayerResource)
+			{
+				PlayerResource->AddGold(Refund);
+				UE_LOG(LogTemp, Log, TEXT("BuildManager: Refunded %d gold (%.0f%% of %d)"),
+					Refund, RefundPercentage * 100.f, PlacedTowers[i].Cost);
+			}
+
 			PlacedTowers.RemoveAt(i);
 
 			// --- Update Tile in Grid ---
@@ -268,6 +293,16 @@ bool ABuildManager::TryDeleteTower()
 void ABuildManager::SetGridManager(AGridManager* InGridManager)
 {
 	GridManager = InGridManager;
+}
+
+void ABuildManager::SetPlayerResourceState(APlayerResourceState* InPlayerResource)
+{
+	PlayerResource = InPlayerResource;
+	if (!PlayerResource)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuildManager: SetPlayerResourceState received null!"));
+	}
+
 }
 
 void ABuildManager::BeginPlay()

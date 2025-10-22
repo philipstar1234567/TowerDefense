@@ -14,4 +14,7 @@ struct FTowerData
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	AActor* TowerActor = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Cost = 0;
 };

@@ -79,6 +79,25 @@ void ATopDownPawn::BeginPlay()
 	if (BuildManagerRef && GridManagerRef)
 	{
 		BuildManagerRef->SetGridManager(GridManagerRef); // Gives a reference
+
+		// Get and pass PlayerResourceState
+		APlayerState* PS = GetPlayerState();
+		if (PS)
+		{
+			APlayerResourceState* PRS = Cast<APlayerResourceState>(PS);
+			if (PRS)
+			{
+				BuildManagerRef->SetPlayerResourceState(PRS);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: PlayerState cast to APlayerResourceState failed!"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("TopDowPawn: GetPlayerState() returned null!"));
+		}
 	}
 
 	APlayerController* PC = Cast<APlayerController>(GetController());

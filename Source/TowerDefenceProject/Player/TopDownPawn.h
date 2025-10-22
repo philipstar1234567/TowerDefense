@@ -10,6 +10,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
+#include "Player/PlayerResourceState.h"
 #include "Grid/GridManager.h"
 #include "Grid/BuildManager.h"
 #include "TopDownPawn.generated.h"
