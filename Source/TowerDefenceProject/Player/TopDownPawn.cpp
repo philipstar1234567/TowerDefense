@@ -1,5 +1,6 @@
 
 #include "Player/TopDownPawn.h"
+#include "HUD/TowerDefenceHUD.h"
 
 ATopDownPawn::ATopDownPawn()
 {
@@ -125,6 +126,22 @@ void ATopDownPawn::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: PlayerController not found!"));
+	}
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	{
+		if (ATowerDefenceHUD* HUD = Cast<ATowerDefenceHUD>(PC->GetHUD()))
+		{
+			HUD->InitializeBindings(Cast<APlayerResourceState>(GetPlayerState()), BuildManagerRef);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: Could not cast to TowerDefenceHUD!"))
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: No PlayerController!"))
 	}
 }
 

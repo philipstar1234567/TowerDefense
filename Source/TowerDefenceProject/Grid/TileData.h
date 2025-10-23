@@ -11,7 +11,7 @@ enum class ETileVisualState : uint8
 	Buildable,	// Green Highlight
 	Occupied,	// Red Highlight
 	Highlighted, // Yellow?
-	Blocked,	// 
+	Blocked,	// grey?
 };
 
 UENUM(BlueprintType)

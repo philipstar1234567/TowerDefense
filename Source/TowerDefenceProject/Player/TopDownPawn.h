@@ -15,6 +15,7 @@
 #include "Grid/BuildManager.h"
 #include "TopDownPawn.generated.h"
 
+// this should not have so much code, however to late to change i think
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATopDownPawn : public APawn
 {
@@ -64,6 +65,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	bool bInvertedScrollDirection;
+
+	// Public functions
+	UFUNCTION()
+	void ToggleBuildMode();
+
+	UFUNCTION()
+	void ToggleDeleteMode();
 
 protected:
 	virtual void Tick(float DeltaTime) override;
@@ -128,12 +136,6 @@ private:
 
 	UFUNCTION()
 	void ToggleMode(EGameMode NewMode);
-
-	UFUNCTION()
-	void ToggleBuildMode();
-
-	UFUNCTION()
-	void ToggleDeleteMode();
 
 	UFUNCTION()
 	void ZoomCamera(const FInputActionValue& Value);

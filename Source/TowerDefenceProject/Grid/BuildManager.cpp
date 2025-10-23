@@ -21,8 +21,9 @@ void ABuildManager::SetMode(EGameMode NewMode)
 	}
 
 	LastHoveredTile = FVector2D(-1, -1);
-
 	CurrentMode = NewMode;
+
+	OnModeChanged.Broadcast(CurrentMode); // Broadcast
 
 	if (CurrentMode == EGameMode::Build)
 	{

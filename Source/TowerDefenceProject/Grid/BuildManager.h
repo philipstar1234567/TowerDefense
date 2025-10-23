@@ -16,6 +16,9 @@ enum class EGameMode : uint8
 	Delete
 };
 
+// Delegate for ModeChange
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnModeChangedDelegate, EGameMode, NewMode);
+
 UCLASS()
 class TOWERDEFENCEPROJECT_API ABuildManager : public AActor
 {
@@ -41,6 +44,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Mode")
 	EGameMode CurrentMode = EGameMode::None;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnModeChangedDelegate OnModeChanged;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building|Economy")
 	int32 TowerCost = 100; // Can override

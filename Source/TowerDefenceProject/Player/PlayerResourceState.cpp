@@ -1,5 +1,4 @@
 
-
 #include "Player/PlayerResourceState.h"
 
 APlayerResourceState::APlayerResourceState()
@@ -16,6 +15,7 @@ void APlayerResourceState::AddGold(int32 AddAmount)
 		return;
 	
 	Gold += AddAmount;
+	OnResourcesChanged.Broadcast(Gold, Health); // broadcast
 
 	UE_LOG(LogTemp, Log, TEXT("PlayerResourceState: Added %d amount of Gold"), AddAmount);
 }
@@ -29,6 +29,7 @@ bool APlayerResourceState::SpendGold(int32 SpendAmount)
 		return false;
 
 	Gold -= SpendAmount;
+	OnResourcesChanged.Broadcast(Gold, Health);
 	return true;
 }
 
@@ -44,6 +45,8 @@ void APlayerResourceState::ApplyDamage(int32 DamageAmount)
 		Health = 0;
 	}
 	
+	OnResourcesChanged.Broadcast(Gold, Health);
+
 	// Check if game is over
 	if (IsGameOver())
 	{

@@ -2,12 +2,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "GameFramework/PlayerState.h"
 #include "PlayerResourceState.generated.h"
 
 // Delegate for defeat
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameOverDelegate);
+
+// Delegate for resource change - HUD will use it
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnResourcesChangedDelegate, int32, Gold, int32, Health);
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API APlayerResourceState : public APlayerState
@@ -17,9 +19,13 @@ class TOWERDEFENCEPROJECT_API APlayerResourceState : public APlayerState
 public:
 	APlayerResourceState();
 
-	// Instance of the delegate
+	// Instance of the defeat delegate
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnGameOverDelegate OnGameOver;
+
+	// instance of the resource delegate
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnResourcesChangedDelegate OnResourcesChanged;
 
 	// Starting Values
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Properties")
