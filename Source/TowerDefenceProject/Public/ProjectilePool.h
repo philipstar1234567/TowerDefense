@@ -4,21 +4,21 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "TestTower.generated.h"
+#include "ProjectilePool.generated.h"
 
-class AProjectilePool;
+class AStandardProjectile;
 
 UCLASS()
-class TOWERDEFENCEPROJECT_API ATestTower : public AActor
+class TOWERDEFENCEPROJECT_API AProjectilePool : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ATestTower();
+	AProjectilePool();
 
-	FTimerHandle FireRateHandle;
+	UPROPERTY()
+	TArray<AStandardProjectile*> ProjectilePool;
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,5 +27,5 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void Fire();
+
 };

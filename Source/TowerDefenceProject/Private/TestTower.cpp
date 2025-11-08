@@ -3,7 +3,12 @@
 
 #include "TestTower.h"
 #include "StandardProjectile.h"
+#include "TimerManager.h"
+#include "ProjectilePool.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+AProjectilePool* ProjectilePool = nullptr;
 
 // Sets default values
 ATestTower::ATestTower()
@@ -16,19 +21,38 @@ ATestTower::ATestTower()
 void ATestTower::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	GetWorldTimerManager().SetTimer(FireRateHandle, this, &ATestTower::Fire, 1.f, true);
+	if (Cast<AProjectilePool>(UGameplayStatics::GetActorOfClass(GetWorld(), AProjectilePool::StaticClass())))
+	{
+		ProjectilePool = Cast<AProjectilePool>(UGameplayStatics::GetActorOfClass(GetWorld(), AProjectilePool::StaticClass()));
+	}
+	else
+	{
+		ProjectilePool = GetWorld()->SpawnActor<AProjectilePool>(FVector(0, 0, -300), FRotator(0, 0, 0));
+		UE_LOG(LogTemp, Log, TEXT("ProjectilePool created"));
+	}
 }
 
 // Called every frame
 void ATestTower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	FFireObject.Broadcast(this);
-	//GetWorld()->SpawnActor<AStandardProjectile>(FVector(-350.0f, -130.0f, 300.0f), FRotator(90, 0, 0));
-
 }
 
 void ATestTower::Fire()
 {
-	GetWorld()->SpawnActor<AStandardProjectile>();
+	if (ProjectilePool->ProjectilePool.IsEmpty())
+	{
+		AStandardProjectile* NewProjectile = GetWorld()->SpawnActor<AStandardProjectile>(GetActorLocation(), GetActorRotation());
+		ProjectilePool->ProjectilePool.Add(NewProjectile);
+		NewProjectile->ProjectilePool = ProjectilePool;
+		UE_LOG(LogTemp, Log, TEXT("Array was empty"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Array was empty, created " + NewProjectile->GetName() + " from " + this->GetName()));
+		NewProjectile->Enable(this);
+	}
+	else
+	{
+		AStandardProjectile* Temp = ProjectilePool->ProjectilePool.Pop();
+		Temp->Enable(this);
+	}
 }
