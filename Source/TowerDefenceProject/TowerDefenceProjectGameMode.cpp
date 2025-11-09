@@ -1,8 +1,10 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "TowerDefenceProjectGameMode.h"
+#include "Player/TopDownPawn.h"
+#include "Player/PlayerResourceState.h"
 
 ATowerDefenceProjectGameMode::ATowerDefenceProjectGameMode()
 {
-	// stub
+	DefaultPawnClass = ATopDownPawn::StaticClass();
+	PlayerStateClass = APlayerResourceState::StaticClass();
 }

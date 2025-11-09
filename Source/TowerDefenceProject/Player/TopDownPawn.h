@@ -10,20 +10,19 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
+#include "Player/PlayerResourceState.h"
 #include "Grid/GridManager.h"
 #include "Grid/BuildManager.h"
 #include "TopDownPawn.generated.h"
 
+// this should not have so much code, however to late to change i think
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATopDownPawn : public APawn
 {
 	GENERATED_BODY()
 
 public:
-	// Constuctor
 	ATopDownPawn();
-
-	// Bind Inputs
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -53,6 +52,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	ABuildManager* BuildManagerRef;
+
 	// Public Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ZoomSpeed;
@@ -66,20 +66,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	bool bInvertedScrollDirection;
 
+	// Public functions
+	UFUNCTION()
+	void ToggleBuildMode();
+
+	UFUNCTION()
+	void ToggleDeleteMode();
+
 protected:
-	// Default functions
 	virtual void Tick(float DeltaTime) override;
 
-	// private Variables
+	// Private Variables
 	float ZoomLevel;
 	float TargetPitch;
 	bool bCameraRotationActive;
 	bool bCameraInterpolationActive;
 	bool bGodViewEnabled;
-	bool bBuildModeEnabled;
 	FVector2D ViewportCenter;
 
-	// Reference to GridManager
+	UPROPERTY(BlueprintReadOnly, Category = "Mode")
+	EGameMode CurrentMode = EGameMode::None;
 
 	// Input Mapping Context and Input Actions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -100,12 +106,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleBuildMode;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Inputs|Keyboard")
+	class UInputAction* IA_ToggleDeleteMode;
+
 	UPROPERTY(EditAnywhere, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleView;
 
 	UPROPERTY(EditAnywhere, Category = "Input|Mouse")
 	class UInputAction* IA_Zoom;
-
 
 private:
 	UFUNCTION()
@@ -127,9 +135,8 @@ private:
 	void ToggleView();
 
 	UFUNCTION()
-	void ToggleBuildMode();
+	void ToggleMode(EGameMode NewMode);
 
 	UFUNCTION()
 	void ZoomCamera(const FInputActionValue& Value);
-
 };
