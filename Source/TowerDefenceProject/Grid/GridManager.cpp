@@ -165,3 +165,132 @@ void AGridManager::UpdateTileVisual(const FTileData& Tile)
 	TileMesh->MarkRenderStateDirty(); // Refresh
 }
 
+bool AGridManager::FindPath(const FVector& StartWorld, const FVector& EndWorld, TArray<FVector>& OutPath)
+{
+	OutPath.Empty();
+
+	FVector2D StartGrid, EndGrid;
+	if (!WorldToGrid(StartWorld, StartGrid) || !WorldToGrid(EndWorld, EndGrid))
+		return false;
+
+	const int32 StartX = StartGrid.X;
+	const int32 StartY = StartGrid.Y;
+	const int32 EndX = EndGrid.X;
+	const int32 EndY = EndGrid.Y;
+
+	if (!TileGrid.IsValidIndex(StartX) || !TileGrid[StartX].IsValidIndex(StartY) ||
+		!TileGrid.IsValidIndex(EndX) || !TileGrid[EndX].IsValidIndex(EndY))
+		return false;
+
+	// If goal is blocked, fail
+	if (TileGrid[EndX][EndY].Occupancy != ETileOccupancyState::Empty)
+		return false;
+
+	// Open and closed lists
+	TArray<FPathNode*> OpenList;
+	TArray<FPathNode*> ClosedList;
+
+	auto Heuristic = [&](int32 X, int32 Y)
+		{
+			return FVector2D::Distance(FVector2D(X, Y), FVector2D(EndX, EndY));
+		};
+
+	// Starting node
+	FPathNode* StartNode = new FPathNode(StartX, StartY, 0.f, Heuristic(StartX, StartY), nullptr);
+	OpenList.Add(StartNode);
+
+	FPathNode* EndNode = nullptr;
+
+	// Directions (4-way)
+	const TArray<FIntPoint> Directions = {
+		{1,0}, {-1,0}, {0,1}, {0,-1}
+	};
+
+	while (OpenList.Num() > 0)
+	{
+		// Get node with lowest F cost
+		OpenList.Sort([](const FPathNode& A, const FPathNode& B)
+			{
+				return A.GetFCost() < B.GetFCost();
+			});
+
+		FPathNode* Current = OpenList[0];
+		OpenList.RemoveAt(0);
+		ClosedList.Add(Current);
+
+		// Check goal
+		if (Current->X == EndX && Current->Y == EndY)
+		{
+			EndNode = Current;
+			break;
+		}
+
+		// Explore neighbors
+		for (const FIntPoint& Dir : Directions)
+		{
+			int32 NX = Current->X + Dir.X;
+			int32 NY = Current->Y + Dir.Y;
+
+			if (!TileGrid.IsValidIndex(NX) || !TileGrid[NX].IsValidIndex(NY))
+				continue;
+
+			const FTileData& NeighborTile = TileGrid[NX][NY];
+			if (NeighborTile.Occupancy != ETileOccupancyState::Empty)
+				continue;
+
+			bool bInClosed = false;
+			for (auto* N : ClosedList)
+				if (N->X == NX && N->Y == NY)
+					bInClosed = true;
+			if (bInClosed)
+				continue;
+
+			float NewGCost = Current->GCost + FVector2D::Distance(
+				FVector2D(Current->X, Current->Y),
+				FVector2D(NX, NY)
+			);
+
+			FPathNode* ExistingOpenNode = nullptr;
+			for (auto* N : OpenList)
+				if (N->X == NX && N->Y == NY)
+					ExistingOpenNode = N;
+
+			if (ExistingOpenNode)
+			{
+				if (NewGCost < ExistingOpenNode->GCost)
+				{
+					ExistingOpenNode->GCost = NewGCost;
+					ExistingOpenNode->Parent = Current;
+				}
+			}
+			else
+			{
+				FPathNode* NewNode = new FPathNode(NX, NY, NewGCost, Heuristic(NX, NY), Current);
+				OpenList.Add(NewNode);
+			}
+		}
+	}
+
+	// Build path if goal found
+	if (EndNode)
+	{
+		TArray<FVector> ReversePath;
+		FPathNode* Node = EndNode;
+		while (Node)
+		{
+			const FTileData& Tile = TileGrid[Node->X][Node->Y];
+			ReversePath.Add(Tile.WorldLocation);
+			Node = Node->Parent;
+		}
+
+		Algo::Reverse(ReversePath);
+		OutPath = ReversePath;
+	}
+
+	// Cleanup nodes
+	for (auto* Node : OpenList) delete Node;
+	for (auto* Node : ClosedList) delete Node;
+
+	return (EndNode != nullptr);
+}
+

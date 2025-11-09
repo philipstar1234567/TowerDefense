@@ -49,6 +49,26 @@ public:
 	// GridArray
 	TArray<TArray<FTileData>> TileGrid;
 
+	//Pathfinding Function
+	UFUNCTION(BlueprintCallable, Category = "Pathfinding")
+	bool FindPath(const FVector& StartWorld, const FVector& EndWorld, TArray<FVector>& OutPath);
+
+	struct FPathNode
+	{
+		int32 X;
+		int32 Y;
+		float GCost; // Distance from start
+		float HCost; // Heuristic to goal
+		FPathNode* Parent;
+
+		float GetFCost() const { return GCost + HCost; }
+
+		FPathNode(int32 InX, int32 InY, float InG, float InH, FPathNode* InParent)
+			: X(InX), Y(InY), GCost(InG), HCost(InH), Parent(InParent) {
+		}
+	};
+
+
 protected:
 	virtual void BeginPlay() override;
 
