@@ -1,5 +1,7 @@
 
 #include "Grid/BuildManager.h"
+#include "EnemyHandler.h"
+#include <Kismet/GameplayStatics.h>
 
 // Constructor
 ABuildManager::ABuildManager()
@@ -228,8 +230,15 @@ bool ABuildManager::TryPlaceTower()
 		GridManager->SetTileVisual(LastHoveredTile.X, LastHoveredTile.Y, GetVisualStateForTile(UpdatedTile, false));
 	}
 
+	AEnemyHandler* Handler = Cast<AEnemyHandler>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyHandler::StaticClass()));
+	if (Handler)
+	{
+		Handler->NotifyGridChanged();
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("BuildManager: Tower placed at X=%d, Y=%d"),
 		(int32)LastHoveredTile.X, (int32)LastHoveredTile.Y);
+
 	return true;
 }
 

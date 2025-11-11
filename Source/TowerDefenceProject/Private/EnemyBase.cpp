@@ -1,81 +1,113 @@
 #include "EnemyBase.h"
+#include "EnemyHandler.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
 
 AEnemyBase::AEnemyBase()
 {
     PrimaryActorTick.bCanEverTick = true;
+
+    MoveSpeed = 200.f;              // Unreal units per second
+    WaypointAcceptanceRadius = 30.f;
+    CurrentPathIndex = 0;
+    EnemyHandler = nullptr;
 }
 
 void AEnemyBase::BeginPlay()
 {
     Super::BeginPlay();
-    CurrentPathIndex = 0;
 }
 
-void AEnemyBase::InitializeEnemy(AGridManager* InGridManager, const FVector& InTargetLocation)
+void AEnemyBase::InitializeEnemy(AEnemyHandler* InEnemyHandler, const FVector& InTargetLocation)
 {
-    GridManager = InGridManager;
+    EnemyHandler = InEnemyHandler;
     TargetLocation = InTargetLocation;
-    PathPoints.Empty();
 
-    if (GridManager)
+    if (EnemyHandler)
     {
-        bool bFoundPath = GridManager->FindPath(GetActorLocation(), TargetLocation, PathPoints);
+        EnemyHandler->RegisterEnemy(this);
+    }
 
-        if (!bFoundPath)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("EnemyBase: No path found to goal!"));
-        }
-        else
-        {
-            CurrentPathIndex = 0;
-        }
+    RequestPath();
+}
+
+void AEnemyBase::RequestPath()
+{
+    CurrentPath.Empty();
+    CurrentPathIndex = 0;
+
+    if (!EnemyHandler)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("EnemyBase %s has no EnemyHandler!"), *GetName());
+        return;
+    }
+
+    const FVector StartPos = GetActorLocation();
+    if (EnemyHandler->FindPath(StartPos, TargetLocation, CurrentPath))
+    {
+        UE_LOG(LogTemp, Log, TEXT("%s found path with %d nodes."), *GetName(), CurrentPath.Num());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("%s failed to find path."), *GetName());
     }
 }
 
-void AEnemyBase::Tick(float DeltaSeconds)
+void AEnemyBase::RecalculatePath()
 {
-    Super::Tick(DeltaSeconds);
+    RequestPath();
+}
 
-    if (PathPoints.Num() > 0 && CurrentPathIndex < PathPoints.Num())
-    {
-        MoveAlongPath(DeltaSeconds);
-    }
+void AEnemyBase::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    MoveAlongPath(DeltaTime);
 }
 
 void AEnemyBase::MoveAlongPath(float DeltaTime)
 {
-    if (CurrentPathIndex >= PathPoints.Num())
-        return;
-
-    const FVector CurrentTarget = PathPoints[CurrentPathIndex];
-    FVector ToTarget = CurrentTarget - GetActorLocation();
-    ToTarget.Z = 0.f;
-
-    float Distance = ToTarget.Length();
-    FVector Direction = ToTarget.GetSafeNormal();
-
-    // Move the character toward the target
-    AddMovementInput(Direction, MoveSpeed * DeltaTime);
-
-    // If you're not using CharacterMovement, use:
-    // SetActorLocation(GetActorLocation() + Direction * MoveSpeed * DeltaTime, true);
-
-    if (Distance <= PathTolerance)
+    if (CurrentPath.Num() == 0 || CurrentPathIndex >= CurrentPath.Num())
     {
+        return; // no path or reached the end
+    }
+
+    FVector CurrentTarget = CurrentPath[CurrentPathIndex];
+    FVector Location = GetActorLocation();
+
+    FVector ToTarget = CurrentTarget - Location;
+    float Distance = ToTarget.Size();
+
+    // Debug: draw lines (optional)
+    // DrawDebugSphere(GetWorld(), CurrentTarget, 15.f, 8, FColor::Yellow, false, -1, 0, 1);
+
+    if (Distance < WaypointAcceptanceRadius)
+    {
+        // Reached this waypoint — move to next
         CurrentPathIndex++;
 
-        if (CurrentPathIndex >= PathPoints.Num())
+        // If we reached the last waypoint, we’re at the goal
+        if (CurrentPathIndex >= CurrentPath.Num())
         {
-            OnPathComplete();
+            UE_LOG(LogTemp, Log, TEXT("%s reached the goal!"), *GetName());
+            Destroy(); // remove enemy or trigger event
+            return;
         }
+        return;
     }
-    DrawDebugSphere(GetWorld(), PathPoints[CurrentPathIndex], 10.f, 8, FColor::Red);
+
+    // Move toward current target
+    FVector Direction = ToTarget.GetSafeNormal();
+    FVector NewLocation = Location + Direction * MoveSpeed * DeltaTime;
+    SetActorLocation(NewLocation);
 }
 
-void AEnemyBase::OnPathComplete()
+void AEnemyBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-    UE_LOG(LogTemp, Log, TEXT("Enemy reached target!"));
-    // You can trigger damage to the player base or destroy the enemy here
+    if (EnemyHandler)
+    {
+        EnemyHandler->UnregisterEnemy(this);
+    }
+
+    Super::EndPlay(EndPlayReason);
 }

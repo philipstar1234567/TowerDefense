@@ -1,44 +1,55 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
-#include "Grid/GridManager.h"
+#include "GameFramework/Actor.h"
 #include "EnemyBase.generated.h"
 
+class AEnemyHandler;
+
 UCLASS()
-class TOWERDEFENCEPROJECT_API AEnemyBase : public ACharacter
+class TOWERDEFENCEPROJECT_API AEnemyBase : public AActor
 {
     GENERATED_BODY()
 
 public:
     AEnemyBase();
 
+    virtual void Tick(float DeltaTime) override;
     virtual void BeginPlay() override;
-    virtual void Tick(float DeltaSeconds) override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    // Called by spawner or wave controller
-    UFUNCTION(BlueprintCallable)
-    void InitializeEnemy(AGridManager* InGridManager, const FVector& InTargetLocation);
+    /** Called right after spawn by the WaveManager */
+    void InitializeEnemy(AEnemyHandler* InEnemyHandler, const FVector& InTargetLocation);
+
+    /** Called by handler to re-path (e.g., after tower placed) */
+    UFUNCTION()
+    void RecalculatePath();
 
 protected:
-    // Grid and path data
-    UPROPERTY()
-    AGridManager* GridManager;
+    /** The path returned by EnemyHandler (list of world points) */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+    TArray<FVector> CurrentPath;
 
-    UPROPERTY()
-    TArray<FVector> PathPoints;
-
+    /** Path target index we're currently moving toward */
     int32 CurrentPathIndex;
 
-    // Movement
+    /** Movement speed (units per second) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-    float MoveSpeed = 250.f;
+    float MoveSpeed;
 
+    /** Distance threshold to "reach" a waypoint */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-    float PathTolerance = 25.f; // Distance to next point before switching
+    float WaypointAcceptanceRadius;
 
+    /** Cached target world location */
     FVector TargetLocation;
 
+    /** Reference to the global EnemyHandler (for pathfinding) */
+    AEnemyHandler* EnemyHandler;
+
+    /** Requests a new path from EnemyHandler */
+    void RequestPath();
+
+    /** Move step toward current waypoint */
     void MoveAlongPath(float DeltaTime);
-    void OnPathComplete();
 };

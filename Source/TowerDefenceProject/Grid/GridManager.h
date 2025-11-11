@@ -49,10 +49,6 @@ public:
 	// GridArray
 	TArray<TArray<FTileData>> TileGrid;
 
-	//Pathfinding Function
-	UFUNCTION(BlueprintCallable, Category = "Pathfinding")
-	bool FindPath(const FVector& StartWorld, const FVector& EndWorld, TArray<FVector>& OutPath);
-
 	struct FPathNode
 	{
 		int32 X;
