@@ -102,17 +102,16 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
     FVector2D StartGridF, EndGridF;
     if (!GridManager->WorldToGrid(StartWorld, StartGridF) || !GridManager->WorldToGrid(EndWorld, EndGridF))
     {
-        // world positions outside grid bounds
+        UE_LOG(LogTemp, Log, TEXT("world position outside grid"));
         return false;
     }
 
     const FIntPoint StartGrid((int32)StartGridF.X, (int32)StartGridF.Y);
     const FIntPoint GoalGrid((int32)EndGridF.X, (int32)EndGridF.Y);
 
-    // Quick check: goal should be walkable (you may want to allow occupied goal depending on design)
+    // Quick check: goal should be walkable
     if (!IsTileWalkable(GoalGrid.X, GoalGrid.Y))
     {
-        // Attempt to allow the goal itself (some design choices want that). For now fail.
         return false;
     }
 
