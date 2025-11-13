@@ -195,7 +195,7 @@ void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 void ATopDownPawn::OnLeftMousePressed()
 {
-	UE_LOG(LogTemp, Log, TEXT("TopDownPawn: Left Mouse Pressed"));
+	// UE_LOG(LogTemp, Log, TEXT("TopDownPawn: Left Mouse Pressed"));
 	if (!BuildManagerRef)
 	{
 		UE_LOG(LogTemp, Log, TEXT("TopDownPawn: BuildManagerRef is null!"));
@@ -304,14 +304,17 @@ void ATopDownPawn::ToggleMode(EGameMode NewMode)
 
 	if (GridManagerRef && BuildManagerRef)
 	{
-		for (int32 X = 0; X < GridManagerRef->GridWidth; ++X)
+		for (int32 X = 0; X < GridManagerRef->GetGridWidth(); ++X)
 		{
-			for (int32 Y = 0; Y < GridManagerRef->GridHeight; ++Y)
+			for (int32 Y = 0; Y < GridManagerRef->GetGridHeight(); ++Y)
 			{
-				FTileData& Tile = GridManagerRef->TileGrid[X][Y];
-				ETileVisualState NewVisualState = BuildManagerRef->GetVisualStateForTile(Tile, false);
-				Tile.VisualState = NewVisualState;
-				GridManagerRef->SetTileVisual(X, Y, NewVisualState);
+				FTileData Tile;
+
+				if (GridManagerRef->GetTileSafe(X, Y, Tile))
+				{
+					ETileVisualState NewVisualState = BuildManagerRef->GetVisualStateForTile(Tile, false);
+					GridManagerRef->SetTileVisual(X, Y, NewVisualState);
+				}
 			}
 		}
 	}

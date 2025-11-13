@@ -2,26 +2,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "TileData.generated.h"
-
-UENUM(BlueprintType)
-enum class ETileVisualState : uint8
-{
-	Default,	// Normal color
-	Buildable,	// Green Highlight
-	Occupied,	// Red Highlight
-	Highlighted, // Yellow?
-	Blocked,	// grey?
-};
 
 UENUM(BlueprintType)
 enum class ETileOccupancyState : uint8
 {
 	Empty,
-	Building, // Might have something like this in the future?
 	Tower,
-	Path,
-	Blocked,
+	Path,		// For enemies
+	Blocked,	// Unbuildable tiles
+	Spawn,		// Enemy spawn/start
+	Goal		// Enemy goal/end
 };
 
 USTRUCT(BlueprintType)
@@ -29,49 +21,35 @@ struct FTileData
 {
 	GENERATED_BODY()
 
-	// --- Static Info ---
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector WorldLocation;
+	// === STATIC INFO ===
+	UPROPERTY(BlueprintReadOnly, Category = "Tile")
+	FVector2D GridLocation = FVector2D(-1, -1);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FVector2D GridLocation;
+	UPROPERTY(BlueprintReadOnly, Category = "Tile")
+	FVector WorldLocation = FVector::ZeroVector;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 InstanceIndex = -1;
-
-
-	// --- Logical State ---
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	// === LOGICAL STATE ===
+	UPROPERTY(BlueprintReadOnly, Category = "Tile")
 	ETileOccupancyState Occupancy = ETileOccupancyState::Empty;
 
-	// Optional point for easy refence
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadOnly, Category = "Tile")
 	TWeakObjectPtr<AActor> OccupantActor;
 
-	// --- Visual State ---
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ETileVisualState VisualState = ETileVisualState::Default;
+	// === INTERNAL STATE === (GridManager only)
+	UPROPERTY()
+	uint8 InternalVisualState = 0; // Index -> ETileVisualState
 
-	// --- Helper Functions ---
-	bool IsBuildable() const
-	{
-		return Occupancy == ETileOccupancyState::Empty;
-	}
+	// === QUERIES === (pure functions)
+	bool IsEmpty() const { return Occupancy == ETileOccupancyState::Empty;  }
+
+	bool IsBuildable() const { return Occupancy == ETileOccupancyState::Empty; }
 
 	bool IsOccupied() const
-	{
-		return Occupancy != ETileOccupancyState::Empty && Occupancy != ETileOccupancyState::Blocked;
+	{ 
+		return	Occupancy == ETileOccupancyState::Tower ||
+			Occupancy == ETileOccupancyState::Spawn ||
+			Occupancy == ETileOccupancyState::Goal;
 	}
 
-	void SetOccupant(AActor* NewOccupant, ETileOccupancyState NewState)
-	{
-		OccupantActor = NewOccupant
-;		Occupancy = NewState;
-	}
-
-	void ClearOccupant()
-	{
-		OccupantActor = nullptr;
-		Occupancy = ETileOccupancyState::Empty;
-	}
+	bool IsPathBlocked() const { return Occupancy == ETileOccupancyState::Blocked; }
 };

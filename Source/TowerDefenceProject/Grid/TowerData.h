@@ -13,7 +13,7 @@ struct FTowerData
 	FVector2D GridLocation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	AActor* TowerActor = nullptr;
+	TWeakObjectPtr<AActor> TowerActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Cost = 0;
