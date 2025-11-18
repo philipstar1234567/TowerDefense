@@ -296,7 +296,11 @@ ETileVisualState ABuildManager::GetVisualStateForTile(const FTileData& Tile, boo
 
 	/*=== NO MODE ACTIVE ===*/
 	if (CurrentMode == EGameMode::None)
+	{
+		if (Tile.Occupancy == ETileOccupancyState::Spawn) return ETileVisualState::Spawn;
+		if (Tile.Occupancy == ETileOccupancyState::Goal) return ETileVisualState::Goal;
 		return ETileVisualState::Default;
+	}
 
 	/*=== BUILD MODE ===*/
 	if (IsBuildModeActive())

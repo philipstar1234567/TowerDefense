@@ -17,8 +17,8 @@ void AGridManager::BeginPlay()
 	InitializeGrid();
 }
 
-/*--- Public API ---*/
 
+/*--- Public API ---*/
 void AGridManager::InitializeGrid()
 {
 	TileGrid.Empty();
@@ -43,6 +43,8 @@ void AGridManager::InitializeGrid()
 			UpdateTileVisualInternal(X, Y);
 		}
 	}
+	// Generate course
+	GenerateCourse();
 
 	UE_LOG(LogTemp, Log, TEXT("GridManager: Initialized %dx%d grid"), GridSizeX, GridSizeY);
 }
@@ -107,6 +109,19 @@ void AGridManager::SetTileVisual(int32 X, int32 Y, ETileVisualState NewState)
 	OnTileVisualChanged.Broadcast(X, Y);
 }
 
+bool AGridManager::SetTileOccupancy(int32 X, int32 Y, ETileOccupancyState NewOccupancy, AActor* NewOccupant)
+{
+	if (!IsValidTile(X, Y)) return false;
+
+	const int32 Index = GetTileIndex(X, Y);
+	FTileData& Tile = TileGrid[Index];
+
+	Tile.Occupancy = NewOccupancy;
+	Tile.OccupantActor = NewOccupant;
+
+	return true;
+}
+
 
 /*--- Internal Helpers ---*/
 int32 AGridManager::GetTileIndex(int32 X, int32 Y) const
@@ -168,6 +183,53 @@ void AGridManager::UpdateTileVisualInternal(int32 X, int32 Y)
 
 	//UMaterialInterface* const* MatPtr = VisualMaterials.Find(Visual);
 	//if (MatPtr) Mesh->SetMaterial(0, *MatPtr);
+}
+
+void AGridManager::GenerateCourse()
+{
+	// Collect every Tile on the edge
+	TArray<FVector2D> EdgeTiles;
+	for (int32 X = 0; X < GridSizeX; X++) // Top + Bott
+	{
+		EdgeTiles.Add(FVector2D(X, 0));
+		EdgeTiles.Add(FVector2D(X, GridSizeY - 1));
+	}
+	for (int32 Y = 1; Y < GridSizeY - 1; Y++) // Right + Left
+	{
+		EdgeTiles.Add(FVector2D(0, Y));
+		EdgeTiles.Add(FVector2D(GridSizeX - 1, Y));
+	}
+
+	// Pick two different tiles - not adjecent
+	FVector2D Spawn, Goal;
+	int32 Attempts = 0;
+	const int32 MaxAttempts = 100;
+
+	do
+	{
+		const int32 A = FMath::RandRange(0, EdgeTiles.Num() - 1);
+		const int32 B = FMath::RandRange(0, EdgeTiles.Num() - 1);
+
+		Spawn = EdgeTiles[A];
+		Goal = EdgeTiles[B];
+
+		if (++Attempts > MaxAttempts) break; // safety
+	}
+	while (Spawn == Goal || FVector2D::Distance(Spawn, Goal) <= 1.5f);
+
+	// Apply
+	SetTileOccupancy(Spawn.X, Spawn.Y, ETileOccupancyState::Spawn);
+	SetTileOccupancy(Goal.X, Goal.Y, ETileOccupancyState::Goal);
+
+	SpawnTile = Spawn;
+	GoalTile = Goal;
+
+	// Update visuals
+	SetTileVisual(Spawn.X, Spawn.Y, ETileVisualState::Spawn);
+	SetTileVisual(Goal.X, Goal.Y, ETileVisualState::Goal);
+
+	UE_LOG(LogTemp, Log, TEXT("Random course: Spawn(%d,%d) Goal(%d,%d)"),
+		(int32)Spawn.X, (int32)Spawn.Y, (int32)Goal.X, (int32)Goal.Y);
 }
 
 //ETileVisualState AGridManager::GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const

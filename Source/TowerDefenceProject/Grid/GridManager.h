@@ -40,6 +40,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
 	float TileSize = 100.f;
 
+	/* Goal and spawn location */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Course")
+	FVector2D SpawnTile = FVector2D(-1, -1);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Course")
+	FVector2D GoalTile = FVector2D(-1, -1);
+
 	/* Visual material for each state ??? */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visuals")
 	TMap<ETileVisualState, UMaterialInterface*> VisualMaterials;
@@ -83,6 +90,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Grid")
 	void SetTileVisual(int32 X, int32 Y, ETileVisualState NewState);
 
+	UFUNCTION(BlueprintCallable, Category = "Grid")
+	bool SetTileOccupancy(int32 X, int32 Y, ETileOccupancyState NewOccupancy, AActor* NewOccupant = nullptr);
+
 	/* Debug console commands */
 	UFUNCTION(Exec) void DebugPrintGrid() const;
 	UFUNCTION(Exec) void DebugSetVisual(int32 X, int32 Y, int32 State);
@@ -94,8 +104,9 @@ private:
 	/* Internal Helpers */
 	void CreateTileMesh(int32 X, int32 Y);
 	void UpdateTileVisualInternal(int32 X, int32 Y);
+	void GenerateCourse();
 	int32 GetTileIndex(int32 X, int32 Y) const;
-	ETileVisualState GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const;
+	//ETileVisualState GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const;
 
 	/* Data */
 	UPROPERTY()
