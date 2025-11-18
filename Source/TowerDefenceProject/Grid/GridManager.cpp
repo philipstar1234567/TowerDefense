@@ -147,31 +147,42 @@ void AGridManager::UpdateTileVisualInternal(int32 X, int32 Y)
 	const int32 Index = GetTileIndex(X, Y);
 	const FTileData& Tile = TileGrid[Index];
 
-	// occupancy -> visual state
-	const ETileVisualState Visual = GetVisualStateForOccupancy(Tile.Occupancy);
-	const uint8 VisualIdx = static_cast<uint8>(Visual);
-	TileGrid[Index].InternalVisualState = VisualIdx; // Keep cache in sync
+	// Use what is stored
+	ETileVisualState State = static_cast<ETileVisualState>(Tile.InternalVisualState);
 
-	UStaticMeshComponent* Mesh = TileMeshes.FindRef(Index);
-	if (!Mesh) return;
-
-	UMaterialInterface* const* MatPtr = VisualMaterials.Find(Visual);
-	if (MatPtr) Mesh->SetMaterial(0, *MatPtr);
-}
-
-ETileVisualState AGridManager::GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const
-{
-	switch (Occupancy)
+	if (UStaticMeshComponent* Mesh = TileMeshes.FindRef(Index))
 	{
-	case ETileOccupancyState::Empty:	return ETileVisualState::Buildable;
-	case ETileOccupancyState::Tower:	return ETileVisualState::Occupied;
-	case ETileOccupancyState::Path:	return ETileVisualState::Path;
-	case ETileOccupancyState::Blocked:	return ETileVisualState::Blocked;
-	case ETileOccupancyState::Spawn:	return ETileVisualState::Spawn;
-	case ETileOccupancyState::Goal:	return ETileVisualState::Goal;
-	default:							return ETileVisualState::Default;
+		if (UMaterialInterface* Mat = VisualMaterials.FindRef(State))
+		{
+			Mesh->SetMaterial(0, Mat);
+		}
 	}
+
+	// Old code - might be useful
+	//const ETileVisualState Visual = GetVisualStateForOccupancy(Tile.Occupancy);
+	//const uint8 VisualIdx = static_cast<uint8>(Visual);
+	//TileGrid[Index].InternalVisualState = VisualIdx; // Keep cache in sync
+
+	//UStaticMeshComponent* Mesh = TileMeshes.FindRef(Index);
+	//if (!Mesh) return;
+
+	//UMaterialInterface* const* MatPtr = VisualMaterials.Find(Visual);
+	//if (MatPtr) Mesh->SetMaterial(0, *MatPtr);
 }
+
+//ETileVisualState AGridManager::GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const
+//{
+//	switch (Occupancy)
+//	{
+//	case ETileOccupancyState::Empty:	return ETileVisualState::Buildable;
+//	case ETileOccupancyState::Tower:	return ETileVisualState::Occupied;
+//	case ETileOccupancyState::Path:	return ETileVisualState::Path;
+//	case ETileOccupancyState::Blocked:	return ETileVisualState::Blocked;
+//	case ETileOccupancyState::Spawn:	return ETileVisualState::Spawn;
+//	case ETileOccupancyState::Goal:	return ETileVisualState::Goal;
+//	default:							return ETileVisualState::Default;
+//	}
+//}
 
 /*--- Debug Commands ---*/
 void AGridManager::DebugPrintGrid() const

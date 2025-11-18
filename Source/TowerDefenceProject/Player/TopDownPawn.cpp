@@ -80,6 +80,7 @@ void ATopDownPawn::BeginPlay()
 	if (BuildManagerRef && GridManagerRef)
 	{
 		BuildManagerRef->SetGridManager(GridManagerRef); // Gives a reference
+		BuildManagerRef->SetMode(EGameMode::None); // quick refresh ish
 
 		// Get and pass PlayerResourceState
 		APlayerState* PS = GetPlayerState();

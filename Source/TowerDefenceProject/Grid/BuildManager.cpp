@@ -285,28 +285,36 @@ void ABuildManager::UpdatePreview()
 
 ETileVisualState ABuildManager::GetVisualStateForTile(const FTileData& Tile, bool bIsHovered) const
 {
-	if (bIsHovered && 
-		((IsBuildModeActive() && Tile.Occupancy == ETileOccupancyState::Empty) ||
-			(IsDeleteModeActive() && Tile.Occupancy == ETileOccupancyState::Tower)))
+	/*=== HOVER FIRST ===*/
+	if (bIsHovered)
 	{
-		return ETileVisualState::Highlighted;
+		if (IsBuildModeActive() && Tile.Occupancy == ETileOccupancyState::Empty)
+			return ETileVisualState::Highlighted;
+		if (IsDeleteModeActive() && Tile.Occupancy == ETileOccupancyState::Tower)
+			return ETileVisualState::Highlighted;
 	}
 
+	/*=== NO MODE ACTIVE ===*/
+	if (CurrentMode == EGameMode::None)
+		return ETileVisualState::Default;
+
+	/*=== BUILD MODE ===*/
 	if (IsBuildModeActive())
 	{	
-		switch (Tile.Occupancy)
-		{
-		case ETileOccupancyState::Empty:	return ETileVisualState::Buildable;
-		case ETileOccupancyState::Tower:	return ETileVisualState::Occupied;
-		case ETileOccupancyState::Path:		return ETileVisualState::Blocked;
-		default: break;
-		}
+		if (Tile.Occupancy == ETileOccupancyState::Empty) return ETileVisualState::Buildable;
+		if (Tile.Occupancy == ETileOccupancyState::Tower) return ETileVisualState::Occupied;
+		if (Tile.Occupancy == ETileOccupancyState::Spawn) return ETileVisualState::Spawn;
+		if (Tile.Occupancy == ETileOccupancyState::Goal) return ETileVisualState::Goal;
+		return ETileVisualState::Blocked;
 	}
-	else if (IsDeleteModeActive())
+
+	/*=== DELETE MODE ===*/
+	if (IsDeleteModeActive())
 	{
-	
-		return (Tile.Occupancy == ETileOccupancyState::Tower) ?
-			ETileVisualState::Occupied : ETileVisualState::Blocked;
+		if (Tile.Occupancy == ETileOccupancyState::Tower) return ETileVisualState::Buildable;
+		if (Tile.Occupancy == ETileOccupancyState::Spawn) return ETileVisualState::Spawn;
+		if (Tile.Occupancy == ETileOccupancyState::Goal) return ETileVisualState::Goal;
+		return ETileVisualState::Blocked;
 	}
 
 	return ETileVisualState::Default;
