@@ -80,7 +80,8 @@ void AStandardProjectile::Enable(ATestTower* SpawnTower, FRotator MovementDirect
 	SetActorTickEnabled(true);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
-	SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());
+	//SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());
+	SetActorLocation(SpawnTower->GetActorLocation());
 	SetActorRotation(MovementDirectionIn);
 	GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
 }
