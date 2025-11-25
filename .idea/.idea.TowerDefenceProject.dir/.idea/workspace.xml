@@ -7,7 +7,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< Updated upstream
     <list default="true" id="decdf33c-35e4-4995-93cd-dc22d2892793" name="Changes" comment="" />
+=======
+    <list default="true" id="decdf33c-35e4-4995-93cd-dc22d2892793" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower1.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower2.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower3.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower4.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower5.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower6.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower7.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower8.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTower9.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/TowerDefenceProject/Private/StandardProjectile.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/Source/TowerDefenceProject/Private/StandardProjectile.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Source/TowerDefenceProject/Public/TestTower.h" beforeDir="false" afterPath="$PROJECT_DIR$/Source/TowerDefenceProject/Public/TestTower.h" afterDir="false" />
+    </list>
+>>>>>>> Stashed changes
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -156,7 +174,11 @@
       <workItem from="1763929791276" duration="13000" />
       <workItem from="1764069569031" duration="383000" />
       <workItem from="1764070264491" duration="1315000" />
+<<<<<<< Updated upstream
       <workItem from="1764071666845" duration="849000" />
+=======
+      <workItem from="1764071666845" duration="255000" />
+>>>>>>> Stashed changes
     </task>
     <servers />
   </component>
