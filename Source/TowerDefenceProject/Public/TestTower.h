@@ -8,6 +8,8 @@
 #include "TestTower.generated.h"
 
 class AProjectilePool;
+class UTowerNode;
+class ATowerTreeManager;
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATestTower : public AActor
@@ -17,8 +19,40 @@ class TOWERDEFENCEPROJECT_API ATestTower : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ATestTower();
+	
+	void Test(); //REMOVE
 
 	FTimerHandle FireRateHandle;
+	void ResetTimer();
+
+	//BPSphere and BPTowerMesh are set during construction in the BluePrint class for the tower. Sphere is for spawning bullets in the right place on the mesh, and TowerMesh is for clickable events.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CustomMesh")
+	UStaticMeshComponent* BPSphere;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CustomMesh")
+	UStaticMeshComponent* BPTowerMesh;
+
+	UPROPERTY()
+	TSoftObjectPtr<UTowerNode> RootNodeRef = TSoftObjectPtr<UTowerNode>(FSoftObjectPath("/Game/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.TestTowerRoot"));
+
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	UTowerNode* CurrentNode = nullptr;
+
+	AProjectilePool* ProjectilePool = nullptr;
+	ATowerTreeManager* TowerTreeManager = nullptr;
+
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	float FireRate = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	float Range = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	float Strength = 1.0f;
+
+	UFUNCTION()
+	void GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed);
+	
 
 protected:
 	// Called when the game starts or when spawned

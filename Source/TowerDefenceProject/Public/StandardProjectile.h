@@ -7,6 +7,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "TestTower.h"
 #include "Components/SphereComponent.h"
+#include "Math/Rotator.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "StandardProjectile.generated.h"
 
@@ -33,7 +34,7 @@ class TOWERDEFENCEPROJECT_API AStandardProjectile : public AActor
 	float InitialSpeed = 500.0f;
 
 	UPROPERTY(EditAnywhere)
-	FVector Direction = FVector(1.f, 0.f, 0.f);
+	FRotator MovementDirection = FRotator(1.f, 0.f, 0.f);
 	
 public:	
 	// Sets default values for this actor's properties
@@ -44,8 +45,8 @@ public:
 
 	FTimerHandle ProjectileLifespanHandle;
 
-	UPROPERTY(EditAnywhere)
-	float ProjectileLifespan = 2.0f;
+	UPROPERTY(EditAnywhere, Category="Custom")
+	float ProjectileLifespan = 5.0f;
 
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
@@ -54,7 +55,7 @@ public:
 	void Spawn(ATestTower* SpawnTower);
 
 	void Disable();
-	void Enable(ATestTower* SpawnTower);
+	void Enable(ATestTower* SpawnTower, FRotator Direction);
 
 protected:
 	// Called when the game starts or when spawned

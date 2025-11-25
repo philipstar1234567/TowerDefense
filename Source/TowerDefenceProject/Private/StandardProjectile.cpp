@@ -11,7 +11,7 @@
 AStandardProjectile::AStandardProjectile()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	CollisionComp->InitSphereRadius(100.0f);
@@ -26,7 +26,7 @@ AStandardProjectile::AStandardProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->Friction = 0.0f;
-	ProjectileMovement->Velocity = Direction * InitialSpeed;
+	ProjectileMovement->Velocity = MovementDirection.Vector() * InitialSpeed;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
 
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
@@ -75,13 +75,12 @@ void AStandardProjectile::Disable()
 	ProjectilePool->ProjectilePool.Push(this);
 }
 
-void AStandardProjectile::Enable(ATestTower* SpawnTower)
+void AStandardProjectile::Enable(ATestTower* SpawnTower, FRotator MovementDirectionIn)
 {
 	SetActorTickEnabled(true);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
-	SetActorLocation(SpawnTower->GetActorLocation());
-	SetActorRotation(SpawnTower->GetActorRotation());
+	SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());
+	SetActorRotation(MovementDirectionIn);
 	GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Enabled " + this->GetName() + " from " + SpawnTower->GetName()));
 }
