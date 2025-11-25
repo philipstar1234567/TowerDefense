@@ -33,7 +33,7 @@ public:
 	UStaticMeshComponent* BPTowerMesh;
 
 	UPROPERTY()
-	TSoftObjectPtr<UTowerNode> RootNodeRef = TSoftObjectPtr<UTowerNode>(FSoftObjectPath("/Game/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.TestTowerRoot"));
+	TSoftObjectPtr<UTowerNode> RootNodeRef = TSoftObjectPtr<UTowerNode>(FSoftObjectPath("/Game/Philip/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.TestTowerRoot"));
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	UTowerNode* CurrentNode = nullptr;

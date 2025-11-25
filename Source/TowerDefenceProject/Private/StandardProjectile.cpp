@@ -31,9 +31,9 @@ AStandardProjectile::AStandardProjectile()
 
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
 	StaticMeshComp->SetupAttachment(CollisionComp);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Game/Projectiles/Shape_Sphere.Shape_Sphere"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Game/Philip/Projectiles/Shape_Sphere.Shape_Sphere"));
 	StaticMeshComp->SetStaticMesh(SphereMesh.Object);
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/Projectiles/M_StandardProjectile.M_StandardProjectile"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/Philip/Projectiles/M_StandardProjectile.M_StandardProjectile"));
 	StaticMeshComp->SetMaterial(0, Material.Object);
 	StaticMeshComp->AddRelativeLocation(FVector(0, 0, -100.0f));
 	StaticMeshComp->SetWorldScale3D(FVector(2, 2, 2));
