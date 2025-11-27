@@ -2,12 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "TimerManager.h"
 #include "WaveManager.generated.h"
 
 class AGridManager;
-class AEnemyBase;
 class AEnemyHandler;
+class AEnemyBase;
 
 USTRUCT(BlueprintType)
 struct FEnemyWaveData
@@ -34,34 +33,29 @@ public:
 
     virtual void BeginPlay() override;
 
-    /** Start a wave by index */
     UFUNCTION(BlueprintCallable, Category = "Waves")
     void StartWave(int32 WaveIndex);
 
 protected:
-    // ---- References ----
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     AGridManager* GridManager = nullptr;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     AEnemyHandler* EnemyHandler = nullptr;
 
-    // ---- Spawn / Target positions ----
-    /** Grid coordinate to spawn enemies from (X,Y tile index) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
     FIntPoint SpawnTile = FIntPoint(0, 0);
 
-    /** Grid coordinate enemies try to reach */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
-    FIntPoint TargetTile = FIntPoint(9, 9);
+    FIntPoint TargetTile = FIntPoint(0, 0);
 
-    // ---- Waves ----
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waves")
     TArray<FEnemyWaveData> Waves;
 
-    int32 CurrentWaveIndex;
-    int32 EnemiesSpawnedThisWave;
-    int32 EnemiesAlive;
+private:
+    int32 CurrentWaveIndex = -1;
+    int32 EnemiesSpawnedThisWave = 0;
+    int32 EnemiesAlive = 0;
     FTimerHandle SpawnTimerHandle;
 
     void SpawnNextEnemy();
@@ -69,6 +63,5 @@ protected:
     void OnEnemyDestroyed(AActor* DestroyedActor);
     void EndWave();
 
-    /** Converts SpawnTile and TargetTile to world positions using the GridManager */
     bool GetTileWorldPositions(FVector& OutSpawnWorld, FVector& OutTargetWorld) const;
 };

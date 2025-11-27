@@ -2,7 +2,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Grid/GridManager.h"
 #include "EnemyBase.h"
-#include "Containers/Queue.h"
 #include "Algo/Reverse.h"
 
 AEnemyHandler::AEnemyHandler()
@@ -19,7 +18,7 @@ void AEnemyHandler::BeginPlay()
         GridManager = Cast<AGridManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
         if (!GridManager)
         {
-            UE_LOG(LogTemp, Error, TEXT("EnemyHandler: No GridManager found in world; pathfinding will fail until one is assigned."));
+            UE_LOG(LogTemp, Error, TEXT("EnemyHandler: No GridManager found. Assign one in the editor or place a GridManager in the level."));
         }
     }
 }
@@ -27,21 +26,13 @@ void AEnemyHandler::BeginPlay()
 void AEnemyHandler::RegisterEnemy(AEnemyBase* Enemy)
 {
     if (!Enemy) return;
-
-    // avoid duplicates
-    for (auto& Weak : RegisteredEnemies)
-    {
-        if (Weak.IsValid() && Weak.Get() == Enemy)
-            return;
-    }
-
+    for (auto& W : RegisteredEnemies) if (W.IsValid() && W.Get() == Enemy) return;
     RegisteredEnemies.Add(Enemy);
 }
 
 void AEnemyHandler::UnregisterEnemy(AEnemyBase* Enemy)
 {
     if (!Enemy) return;
-
     for (int32 i = RegisteredEnemies.Num() - 1; i >= 0; --i)
     {
         if (!RegisteredEnemies[i].IsValid() || RegisteredEnemies[i].Get() == Enemy)
@@ -51,16 +42,12 @@ void AEnemyHandler::UnregisterEnemy(AEnemyBase* Enemy)
 
 void AEnemyHandler::NotifyGridChanged()
 {
-    // Ask each registered enemy to recalc path
     for (int32 i = RegisteredEnemies.Num() - 1; i >= 0; --i)
     {
         if (RegisteredEnemies[i].IsValid())
         {
-            AEnemyBase* Enemy = RegisteredEnemies[i].Get();
-            if (Enemy)
-            {
-                Enemy->RecalculatePath();
-            }
+            AEnemyBase* E = RegisteredEnemies[i].Get();
+            if (E) E->RecalculatePath();
         }
         else
         {
@@ -72,10 +59,21 @@ void AEnemyHandler::NotifyGridChanged()
 bool AEnemyHandler::IsTileWalkable(int32 X, int32 Y) const
 {
     if (!GridManager) return false;
-    if (!GridManager->TileGrid.IsValidIndex(X) || !GridManager->TileGrid[X].IsValidIndex(Y)) return false;
+    if (!GridManager->IsValidTile(X, Y)) return false;
 
-    const FTileData& Tile = GridManager->TileGrid[X][Y];
-    return Tile.Occupancy == ETileOccupancyState::Empty;
+    FTileData Tile;
+    if (!GridManager->GetTileSafe(X, Y, Tile)) return false;
+
+    // Consider spawn & goal tiles walkable as well as empty
+    switch (Tile.Occupancy)
+    {
+    case ETileOccupancyState::Empty:
+    case ETileOccupancyState::Spawn:
+    case ETileOccupancyState::Goal:
+        return true;
+    default:
+        return false;
+    }
 }
 
 TArray<FIntPoint> AEnemyHandler::GetNeighbors4(const FIntPoint& P) const
@@ -99,28 +97,36 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
         return false;
     }
 
+    // Convert world -> grid coordinates (tile indices)
     FVector2D StartGridF, EndGridF;
-    if (!GridManager->WorldToGrid(StartWorld, StartGridF) || !GridManager->WorldToGrid(EndWorld, EndGridF))
+    if (!GridManager->WorldToGrid(StartWorld, StartGridF))
     {
-        UE_LOG(LogTemp, Log, TEXT("world position outside grid"));
+        UE_LOG(LogTemp, Log, TEXT("EnemyHandler::FindPath - start position outside grid: %s"), *StartWorld.ToString());
+        return false;
+    }
+    if (!GridManager->WorldToGrid(EndWorld, EndGridF))
+    {
+        UE_LOG(LogTemp, Log, TEXT("EnemyHandler::FindPath - end position outside grid: %s"), *EndWorld.ToString());
         return false;
     }
 
     const FIntPoint StartGrid((int32)StartGridF.X, (int32)StartGridF.Y);
     const FIntPoint GoalGrid((int32)EndGridF.X, (int32)EndGridF.Y);
 
-    // Quick check: goal should be walkable
+    // Quick goal walkable check
     if (!IsTileWalkable(GoalGrid.X, GoalGrid.Y))
     {
+        UE_LOG(LogTemp, Log, TEXT("EnemyHandler::FindPath - goal tile not walkable (%d,%d)"), GoalGrid.X, GoalGrid.Y);
         return false;
     }
 
-    // A* implementation using arrays + map for node lookup
+    // A* structures
     TArray<FPathNode> Nodes;
-    Nodes.Reserve(512); // heuristic reserve
-
-    // Map from coord -> index in Nodes array
+    Nodes.Reserve(1024);
     TMap<FIntPoint, int32> NodeIndexMap;
+    TArray<int32> OpenList;
+    TSet<FIntPoint> ClosedSet;
+
     auto AddNode = [&](const FIntPoint& Coord, int32 ParentIdx, float G, float H) -> int32
         {
             FPathNode Node;
@@ -128,106 +134,97 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
             Node.ParentIndex = ParentIdx;
             Node.G = G;
             Node.H = H;
-            int32 NewIndex = Nodes.Add(MoveTemp(Node));
-            NodeIndexMap.Add(Coord, NewIndex);
-            return NewIndex;
+            int32 Idx = Nodes.Add(MoveTemp(Node));
+            NodeIndexMap.Add(Coord, Idx);
+            return Idx;
         };
-
-    // Open list stores indices into Nodes
-    TArray<int32> OpenList;
-    TSet<FIntPoint> ClosedSet;
 
     auto Heuristic = [&](const FIntPoint& A, const FIntPoint& B) -> float
         {
-            // Use Manhattan or Euclidean; grid distance works fine
+            // Manhattan or Euclidean; use Euclidean for now
             return FVector2D::Distance(FVector2D(A.X, A.Y), FVector2D(B.X, B.Y));
         };
 
-    // Create start node
+    // Start node
     int32 StartIdx = AddNode(StartGrid, -1, 0.f, Heuristic(StartGrid, GoalGrid));
     OpenList.Add(StartIdx);
-
-    int32 FoundGoalNodeIdx = INDEX_NONE;
+    int32 FoundGoalIdx = INDEX_NONE;
 
     while (OpenList.Num() > 0)
     {
-        // find node in open list with smallest F
-        int32 BestOpenIdx = OpenList[0];
-        float BestF = Nodes[BestOpenIdx].F();
-        int32 BestOpenListPos = 0;
-
+        // pick open node with smallest F
+        int32 BestPos = 0;
+        int32 BestNodeIdx = OpenList[0];
+        float BestF = Nodes[BestNodeIdx].F();
         for (int32 i = 1; i < OpenList.Num(); ++i)
         {
-            int32 NodeIdx = OpenList[i];
-            float NodeF = Nodes[NodeIdx].F();
-            if (NodeF < BestF)
+            int32 idx = OpenList[i];
+            float f = Nodes[idx].F();
+            if (f < BestF)
             {
-                BestF = NodeF;
-                BestOpenIdx = NodeIdx;
-                BestOpenListPos = i;
+                BestF = f;
+                BestNodeIdx = idx;
+                BestPos = i;
             }
         }
 
-        // remove from open list
-        OpenList.RemoveAt(BestOpenListPos);
-        ClosedSet.Add(Nodes[BestOpenIdx].Coord);
+        // pop best
+        OpenList.RemoveAt(BestPos);
+        ClosedSet.Add(Nodes[BestNodeIdx].Coord);
 
-        // if goal
-        if (Nodes[BestOpenIdx].Coord == GoalGrid)
+        // check goal
+        if (Nodes[BestNodeIdx].Coord == GoalGrid)
         {
-            FoundGoalNodeIdx = BestOpenIdx;
+            FoundGoalIdx = BestNodeIdx;
             break;
         }
 
         // neighbors
-        for (const FIntPoint& NCoord : GetNeighbors4(Nodes[BestOpenIdx].Coord))
+        for (const FIntPoint& NCoord : GetNeighbors4(Nodes[BestNodeIdx].Coord))
         {
-            // bounds & walkable check
-            if (!GridManager->TileGrid.IsValidIndex(NCoord.X) || !GridManager->TileGrid[NCoord.X].IsValidIndex(NCoord.Y))
-                continue;
-            if (!IsTileWalkable(NCoord.X, NCoord.Y))
-                continue;
-            if (ClosedSet.Contains(NCoord))
-                continue;
+            if (!GridManager->IsValidTile(NCoord.X, NCoord.Y)) continue;
+            if (!IsTileWalkable(NCoord.X, NCoord.Y)) continue;
+            if (ClosedSet.Contains(NCoord)) continue;
 
-            float TentativeG = Nodes[BestOpenIdx].G + 1.0f; // cost between adjacent tiles = 1; adjust if using weighted costs
+            float TentativeG = Nodes[BestNodeIdx].G + 1.0f; // cost between neighbors = 1
 
-            int32* ExistingPtr = NodeIndexMap.Find(NCoord);
-            if (ExistingPtr)
+            int32* Existing = NodeIndexMap.Find(NCoord);
+            if (Existing)
             {
-                int32 ExistingIdx = *ExistingPtr;
-                if (TentativeG < Nodes[ExistingIdx].G)
+                int32 existingIdx = *Existing;
+                if (TentativeG < Nodes[existingIdx].G)
                 {
-                    Nodes[ExistingIdx].G = TentativeG;
-                    Nodes[ExistingIdx].ParentIndex = BestOpenIdx;
+                    Nodes[existingIdx].G = TentativeG;
+                    Nodes[existingIdx].ParentIndex = BestNodeIdx;
                 }
-                // already in open list (we don't need to re-add)
-                if (!OpenList.Contains(ExistingIdx))
-                    OpenList.Add(ExistingIdx);
+                if (!OpenList.Contains(existingIdx)) OpenList.Add(existingIdx);
             }
             else
             {
                 float H = Heuristic(NCoord, GoalGrid);
-                int32 NewIdx = AddNode(NCoord, BestOpenIdx, TentativeG, H);
-                OpenList.Add(NewIdx);
+                int32 newIdx = AddNode(NCoord, BestNodeIdx, TentativeG, H);
+                OpenList.Add(newIdx);
             }
         }
     } // end while
 
-    if (FoundGoalNodeIdx == INDEX_NONE)
+    if (FoundGoalIdx == INDEX_NONE)
     {
         // No path found
         return false;
     }
 
-    // build reverse path (tile centers)
+    // Reconstruct path: tile centers from goal to start
     TArray<FVector> ReversePath;
-    int32 Cursor = FoundGoalNodeIdx;
+    int32 Cursor = FoundGoalIdx;
     while (Cursor != -1 && Nodes.IsValidIndex(Cursor))
     {
         const FIntPoint& C = Nodes[Cursor].Coord;
-        const FTileData& Tile = GridManager->TileGrid[C.X][C.Y];
-        ReversePath.Add(Tile.WorldLocation);
+        FTileData Tile;
+        if (GridManager->GetTileSafe(C.X, C.Y, Tile))
+        {
+            ReversePath.Add(Tile.WorldLocation);
+        }
         Cursor = Nodes[Cursor].ParentIndex;
     }
 

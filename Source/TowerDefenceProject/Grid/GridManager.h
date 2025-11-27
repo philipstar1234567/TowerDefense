@@ -112,6 +112,9 @@ public:
 		}
 	};
 
+	/* Data */
+	UPROPERTY()
+	TArray<FTileData> TileGrid; // 1D Array
 
 protected:
 	virtual void BeginPlay() override;
@@ -124,9 +127,7 @@ private:
 	int32 GetTileIndex(int32 X, int32 Y) const;
 	//ETileVisualState GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const;
 
-	/* Data */
-	UPROPERTY()
-	TArray<FTileData> TileGrid; // 1D Array
+	
 
 	UPROPERTY()
 	TMap<int32, UStaticMeshComponent*> TileMeshes; // Index -> mesh
