@@ -7,6 +7,7 @@
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
 #include "TowerDefenceProject.h"
+#include "Kismet/GameplayStatics.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
 void ATowerDefenceProjectPlayerController::BeginPlay()
