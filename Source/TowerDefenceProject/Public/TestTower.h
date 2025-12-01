@@ -1,5 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+//Talk to Even about getting the enemy movement so you can debug the overlap events!
+
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,6 +12,9 @@
 class AProjectilePool;
 class UTowerNode;
 class ATowerTreeManager;
+class AEnemyBase;
+class USphereComponent;
+class USceneComponent;
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATestTower : public AActor
@@ -21,6 +26,9 @@ public:
 	ATestTower();
 	
 	void Test(); //REMOVE
+	
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
+	//USceneComponent* TowerRoot;
 
 	FTimerHandle FireRateHandle;
 	void ResetTimer();
@@ -45,13 +53,29 @@ public:
 	float FireRate = 1.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
-	float Range = 1.0f;
+	float Range = 100.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	float Strength = 1.0f;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	AEnemyBase* CurrentTarget = nullptr;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	USphereComponent* EnemyDetector = nullptr;
+	
+	bool bIsPlaced = true;
+	
+	TArray<AEnemyBase*> EnemyArray;
 
 	UFUNCTION()
 	void GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed);
+	
+	UFUNCTION()
+	void OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnEnemyLost(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex);
 	
 
 protected:

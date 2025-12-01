@@ -2,6 +2,7 @@
 #include "EnemyHandler.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Components/SphereComponent.h"
 
 AEnemyBase::AEnemyBase()
 {
@@ -11,6 +12,16 @@ AEnemyBase::AEnemyBase()
     WaypointAcceptanceRadius = 30.f;
     CurrentPathIndex = 0;
     EnemyHandler = nullptr;
+    
+    // Creates Collision Component as a sphere and attaches it to the root
+    CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
+    CollisionComp->SetCollisionProfileName(TEXT("Pawn"));
+    CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    CollisionComp->SetGenerateOverlapEvents(true);
+    CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    CollisionComp->InitSphereRadius(100.0f);
+    CollisionComp->SetupAttachment(RootComponent);
+    
 }
 
 void AEnemyBase::BeginPlay()
@@ -83,10 +94,10 @@ void AEnemyBase::MoveAlongPath(float DeltaTime)
 
     if (Distance < WaypointAcceptanceRadius)
     {
-        // Reached this waypoint — move to next
+        // Reached this waypoint ï¿½ move to next
         CurrentPathIndex++;
 
-        // If we reached the last waypoint, we’re at the goal
+        // If we reached the last waypoint, weï¿½re at the goal
         if (CurrentPathIndex >= CurrentPath.Num())
         {
             UE_LOG(LogTemp, Log, TEXT("%s reached the goal!"), *GetName());

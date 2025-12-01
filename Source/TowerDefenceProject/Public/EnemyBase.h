@@ -5,6 +5,7 @@
 #include "EnemyBase.generated.h"
 
 class AEnemyHandler;
+class USphereComponent;
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API AEnemyBase : public AActor
@@ -24,6 +25,10 @@ public:
     /** Called by handler to re-path (e.g., after tower placed) */
     UFUNCTION()
     void RecalculatePath();
+    
+    /** Component to check for collisions with TestTower's EnemyDetector and StandardProjectile */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    USphereComponent* CollisionComp;
 
 protected:
     /** The path returned by EnemyHandler (list of world points) */

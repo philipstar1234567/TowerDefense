@@ -26,7 +26,6 @@ AStandardProjectile::AStandardProjectile()
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->Friction = 0.0f;
-	ProjectileMovement->Velocity = MovementDirection.Vector() * InitialSpeed;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
 
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
@@ -75,13 +74,13 @@ void AStandardProjectile::Disable()
 	ProjectilePool->ProjectilePool.Push(this);
 }
 
-void AStandardProjectile::Enable(ATestTower* SpawnTower, FRotator MovementDirectionIn)
+void AStandardProjectile::Enable(ATestTower* SpawnTower, FVector MovementDirectionIn)
 {
 	SetActorTickEnabled(true);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	//SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());
 	SetActorLocation(SpawnTower->GetActorLocation());
-	SetActorRotation(MovementDirectionIn);
+	ProjectileMovement->Velocity = MovementDirectionIn * InitialSpeed;
 	GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
 }
