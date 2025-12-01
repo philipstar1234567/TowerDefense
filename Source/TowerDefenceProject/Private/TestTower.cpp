@@ -24,7 +24,7 @@ ATestTower::ATestTower()
 	
 	EnemyDetector = CreateDefaultSubobject<USphereComponent>(TEXT("EnemyDetector"));
 	EnemyDetector->InitSphereRadius(Range);
-	EnemyDetector->SetupAttachment(RootComponent);
+	RootComponent = EnemyDetector;
 	EnemyDetector->BodyInstance.SetCollisionProfileName(TEXT("Pawn"));
 	EnemyDetector->SetGenerateOverlapEvents(true);
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
@@ -150,6 +150,9 @@ void ATestTower::Tick(float DeltaTime)
 	
 }
 
+/**
+ * 
+ */
 void ATestTower::Fire()
 {
 	if (bIsPlaced == true && EnemyArray.IsEmpty() == false)
