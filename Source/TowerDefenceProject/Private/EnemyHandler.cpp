@@ -216,7 +216,7 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
                 OpenList.Add(newIdx);
             }
         }
-    } // end while
+    }
 
     if (FoundGoalIdx == INDEX_NONE)
     {

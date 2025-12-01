@@ -114,7 +114,7 @@ void AWaveManager::SpawnNextEnemy()
     FActorSpawnParameters Params;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-    FVector SpawnLoc = SpawnWorld + FVector(0.f, 0.f, 50.f);
+    FVector SpawnLoc = SpawnWorld;
 
     AEnemyBase* NewEnemy = GetWorld()->SpawnActor<AEnemyBase>(Wave.EnemyClass, SpawnLoc, FRotator::ZeroRotator, Params);
     if (NewEnemy)

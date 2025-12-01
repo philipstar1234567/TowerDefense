@@ -7,8 +7,8 @@ AEnemyBase::AEnemyBase()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    MoveSpeed = 100.f;              // Unreal units per second
-    WaypointAcceptanceRadius = 30.f;
+    MoveSpeed = 100.f;             
+    WaypointAcceptanceRadius = 5.f;
     CurrentPathIndex = 0;
     EnemyHandler = nullptr;
 }
