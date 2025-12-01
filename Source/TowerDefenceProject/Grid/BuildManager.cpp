@@ -53,7 +53,7 @@ void ABuildManager::SelectTowerIndex(int32 NewIndex)
 
 	if (SelectedTowerClass)
 	{
-		ATower* DefaultObj = SelectedTowerClass->GetDefaultObject<ATower>();
+		ATestTower* DefaultObj = SelectedTowerClass->GetDefaultObject<ATestTower>();
 		SelectedTowerCost = DefaultObj->GetTowerCost();
 	}
 	else
@@ -110,7 +110,7 @@ void ABuildManager::SpawnAndSetupPreview()
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	PreviewTower = GetWorld()->SpawnActor<ATower>(SelectedTowerClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
+	PreviewTower = GetWorld()->SpawnActor<ATestTower>(SelectedTowerClass, FVector::ZeroVector, FRotator::ZeroRotator, Params);
 	
 	if (PreviewTower)
 	{
@@ -178,7 +178,7 @@ bool ABuildManager::PerformPlacement(const FTileData& Tile)
 	
 	FVector SpawnLoc = Tile.WorldLocation + FVector(0.f, 0.f, TowerZOffset);
 	FActorSpawnParameters Params;
-	ATower* SpawnedTower = GetWorld()->SpawnActor<ATower>(SelectedTowerClass, SpawnLoc, FRotator::ZeroRotator, Params);
+	ATestTower* SpawnedTower = GetWorld()->SpawnActor<ATestTower>(SelectedTowerClass, SpawnLoc, FRotator::ZeroRotator, Params);
 	if (!SpawnedTower)
 	{
 		PlayerResource->AddGold(SelectedTowerCost);
@@ -188,6 +188,7 @@ bool ABuildManager::PerformPlacement(const FTileData& Tile)
 
 	SpawnedTower->SetPreviewMode(false);
 	SpawnedTower->SetActorEnableCollision(true);
+	SpawnedTower->bIsPlaced = true;
 
 	FTowerData NewTower{ LastHoveredTile, SpawnedTower, SelectedTowerCost };
 	PlacedTowers.Add(NewTower);
