@@ -31,6 +31,8 @@ void AEnemyHandler::TryFindGridManager1()
         {
             UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
 
+            GridManager->EnemyHandler = this;
+
             GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle1);
         }
     }

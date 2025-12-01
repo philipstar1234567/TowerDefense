@@ -49,6 +49,41 @@ void AGridManager::InitializeGrid()
 	UE_LOG(LogTemp, Log, TEXT("GridManager: Initialized %dx%d grid"), GridSizeX, GridSizeY);
 }
 
+bool AGridManager::CanPlaceTowerAt(FIntPoint Tile)
+{
+	// Validate tile indices
+	if (!IsValidTile(Tile.X, Tile.Y))
+		return false;
+
+	const int32 Index = GetTileIndex(Tile.X, Tile.Y);
+	FTileData& TileRef = TileGrid[Index];
+	
+	if (TileRef.Occupancy != ETileOccupancyState::Empty)
+		return false;
+
+	// Temporarily mark as blocked (or Tower) so pathfinder treats it as non-walkable
+	TileRef.Occupancy = ETileOccupancyState::Blocked;
+	TileRef.OccupantActor = nullptr;
+
+	const int32 SpawnX = FMath::RoundToInt(SpawnTile.X);
+	const int32 SpawnY = FMath::RoundToInt(SpawnTile.Y);
+	const int32 GoalX = FMath::RoundToInt(GoalTile.X);
+	const int32 GoalY = FMath::RoundToInt(GoalTile.Y);
+
+	// Convert spawn/goal tile indices to world locations (tile centers)
+	const FVector SpawnWorld = GetTileWorldLocation(SpawnX, SpawnY);
+	const FVector GoalWorld = GetTileWorldLocation(GoalX, GoalY);
+
+	// Ask the enemy handler to find a path with the tile temporarily blocked
+	TArray<FVector> TempPath;
+	const bool bPathExists = EnemyHandler->FindPath(SpawnWorld, GoalWorld, TempPath);
+
+	// Revert tile occupancy to original state
+	TileRef.Occupancy = ETileOccupancyState::Empty;
+
+	return bPathExists;
+}
+
 bool AGridManager::IsValidTile(int32 X, int32 Y) const
 {
 	return X >= 0 && X < GridSizeX && Y >= 0 && Y < GridSizeY;

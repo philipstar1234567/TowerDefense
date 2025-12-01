@@ -78,6 +78,18 @@ bool ABuildManager::TryPlaceTower()
 	{
 		return false;
 	}
+
+	const int32 TileX = FMath::FloorToInt(Tile.GridLocation.X);
+	const int32 TileY = FMath::FloorToInt(Tile.GridLocation.Y);
+
+	FIntPoint TileIndex(TileX, TileY);
+
+	if (!GridManager->CanPlaceTowerAt(TileIndex))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuildManager: Tower placement blocked the only path!"));
+		return false;
+	}
+
 	return PerformPlacement(Tile);
 }
 

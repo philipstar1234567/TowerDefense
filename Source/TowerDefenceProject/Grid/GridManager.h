@@ -1,10 +1,11 @@
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Grid/TileData.h"
+#include "EnemyHandler.h"
 #include "GridManager.generated.h"
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTileVisualChanged, int32, X, int32, Y);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTileOccupancyChanged, int32, X, int32, Y);
@@ -29,6 +30,9 @@ class TOWERDEFENCEPROJECT_API AGridManager : public AActor
 	
 public:
 	AGridManager();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
+	AEnemyHandler* EnemyHandler = nullptr;
 
 	/* Grid size - Set in editor */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
@@ -65,6 +69,9 @@ public:
 	// Public API
 	UFUNCTION(BlueprintCallable, Category = "Grid")
 	void InitializeGrid();
+
+	UFUNCTION(BlueprintCallable, Category = "Grid")
+	bool CanPlaceTowerAt(FIntPoint Tile);
 
 	UFUNCTION(BlueprintPure, Category = "Grid")
 	bool IsValidTile(int32 X, int32 Y) const;

@@ -128,7 +128,7 @@ void AWaveManager::SpawnNextEnemy()
     }
 
     FActorSpawnParameters Params;
-    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
     FVector SpawnLoc = SpawnWorld;
 
