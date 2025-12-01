@@ -9,9 +9,10 @@ void UUpgradeTreeUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	Option1->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption1Clicked);
-	Option2->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption2Clicked);
-	Option3->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption3Clicked);
+	//Option1->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption1Clicked);
+	//Option2->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption2Clicked);
+	//Option3->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption3Clicked);
+	//Close->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnCloseClicked);
 }
 
 void UUpgradeTreeUI::OnOption1Clicked()
@@ -27,5 +28,10 @@ void UUpgradeTreeUI::OnOption2Clicked()
 void UUpgradeTreeUI::OnOption3Clicked()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 3 Clicked"));
+}
+
+void UUpgradeTreeUI::OnCloseClicked()
+{
+	RemoveFromParent();	
 }
 

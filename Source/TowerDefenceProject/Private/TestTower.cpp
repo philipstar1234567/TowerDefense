@@ -62,7 +62,7 @@ void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPress
 {
 	if (TopDownPawn->CurrentMode == EGameMode::None)
 	{
-		UUpgradeTreeUI* UpgradeTreeUI = CreateWidget<UUpgradeTreeUI>(this, UUpgradeTreeUI::StaticClass());
+		UUpgradeTreeUI* UpgradeTreeUI = CreateWidget<UUpgradeTreeUI>(UGameplayStatics::GetPlayerController(GetWorld(), 0), UUpgradeTreeUI::StaticClass());
 		UpgradeTreeUI->Tower = this;
 		UpgradeTreeUI->AddToViewport();
 	}

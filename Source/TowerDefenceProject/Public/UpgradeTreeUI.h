@@ -31,6 +31,9 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UButton* Option3;
 	
+	UPROPERTY(meta = (BindWidget))
+	UButton* Close;
+	
 	UFUNCTION()
 	void OnOption1Clicked();
 	
@@ -39,4 +42,7 @@ public:
 	
 	UFUNCTION()
 	void OnOption3Clicked();
+	
+	UFUNCTION()
+	void OnCloseClicked();
 };
