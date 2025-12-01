@@ -75,7 +75,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	USphereComponent* EnemyDetector = nullptr;
 	
-	bool bIsPlaced = true;
+	UPROPERTY(EditAnywhere, Category = "Tower Stats")
+	bool bIsPlaced = false;
 	
 	TArray<AEnemyBase*> EnemyArray;
 

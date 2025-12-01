@@ -18,6 +18,7 @@ void ATower::BeginPlay()
 	Super::BeginPlay();
 
 }
+
 void ATower::SetPreviewMode(bool bIsPreview)
 {
 	if (!TowerMesh) return;

@@ -7,6 +7,7 @@
 #include "Player/PlayerResourceState.h"
 #include "TowerData.h"
 #include "Tower.h"
+#include "TestTower.h"
 #include "BuildManager.generated.h"
 
 UENUM(BlueprintType)
@@ -36,7 +37,7 @@ public:
 	AGridManager* GridManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building|Towers", meta = (ClampMax = 9)); // clamp max towers
-	TArray<TSubclassOf<ATower>> AvailableTowers;
+	TArray<TSubclassOf<ATestTower>> AvailableTowers;
 
 	// State
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Building")
@@ -116,8 +117,8 @@ private:
 	// State
 	FVector2D LastHoveredTile = FVector2D(-1, -1);
 	bool bPlayerRotating = false;
-	TSubclassOf<ATower> SelectedTowerClass;
-	ATower* PreviewTower = nullptr;
+	TSubclassOf<ATestTower> SelectedTowerClass;
+	ATestTower* PreviewTower = nullptr;
 	APlayerResourceState* PlayerResource = nullptr;
 	TArray<FTowerData> PlacedTowers;
 
