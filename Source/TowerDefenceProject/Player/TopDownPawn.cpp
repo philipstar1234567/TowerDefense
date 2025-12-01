@@ -1,5 +1,6 @@
 
 #include "Player/TopDownPawn.h"
+#include "HUD/PauseMenuWidget.h"
 #include "HUD/TowerDefenceHUD.h"
 
 ATopDownPawn::ATopDownPawn()
@@ -29,6 +30,7 @@ ATopDownPawn::ATopDownPawn()
 	bCameraRotationActive = false;
 	bCameraInterpolationActive = false;
 	bGodViewEnabled = false;
+	bPauseMenuToggle = false;
 	CurrentMode = EGameMode::None;
 	bInvertedScrollDirection = true;
 
@@ -110,6 +112,8 @@ void ATopDownPawn::BeginPlay()
 		PC->GetViewportSize(ViewportX, ViewportY);
 		ViewportCenter = FVector2D(ViewportX / 2, ViewportY / 2);
 
+		FInputModeGameAndUI InputMode;
+		PC->SetInputMode(InputMode);
 		PC->bShowMouseCursor = true;
 
 		// Get the local player subsystem
@@ -165,6 +169,7 @@ void ATopDownPawn::Tick(float DeltaTime)
 	}
 }
 
+// i should really have done this in the Player Controller...
 void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -191,6 +196,9 @@ void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		
 		// Zoom - MouseWheel
 		EnhancedInput->BindAction(IA_Zoom, ETriggerEvent::Triggered, this, &ATopDownPawn::ZoomCamera);
+
+		// Pause - ESC P
+		EnhancedInput->BindAction(IA_TogglePauseMode, ETriggerEvent::Triggered, this, &ATopDownPawn::TogglePause);
 	}
 }
 
@@ -348,4 +356,61 @@ void ATopDownPawn::ZoomCamera(const FInputActionValue& Value)
 	ZoomLevel += InputValue * ZoomSpeed;
 	ZoomLevel = FMath::Clamp(ZoomLevel, 0, 1500);
 	SpringArm->TargetArmLength = ZoomLevel;
+}
+
+void ATopDownPawn::TogglePause()
+{
+	bPauseMenuToggle = !bPauseMenuToggle;
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC || !PauseMenuClass) return;
+
+	if (bPauseMenuToggle)
+	{
+		// Create widget id not exist
+		if (!PauseMenuInstance)
+		{
+			PauseMenuInstance = CreateWidget<UPauseMenuWidget>(PC, PauseMenuClass);
+		}
+
+		// Make root widget focusable
+		if (PauseMenuInstance)
+		{
+			PauseMenuInstance->SetIsFocusable(true);
+
+			if (!PauseMenuInstance->IsInViewport())
+			{
+				PauseMenuInstance->AddToViewport(10);
+			}
+		}
+
+		// Pause the game
+		if (PC)
+		{
+			PC->SetPause(true);
+			PC->bShowMouseCursor = true;
+
+			FInputModeUIOnly InputMode;
+			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+			InputMode.SetWidgetToFocus(PauseMenuInstance->TakeWidget());
+			PC->SetInputMode(InputMode);
+		}
+	}
+	else
+	{
+		// Resume
+		if (PauseMenuInstance)
+		{
+			PauseMenuInstance->RemoveFromParent();
+		}
+
+		if (PC)
+		{
+			PC->SetPause(false);
+			PC->bShowMouseCursor = true; // dont know why, but i guess ill keep it for safety reasons
+
+			FInputModeGameAndUI InputMode; // should make this a function so i never set wrong, and takes less space...
+			PC->SetInputMode(InputMode);
+		}
+	}
 }
