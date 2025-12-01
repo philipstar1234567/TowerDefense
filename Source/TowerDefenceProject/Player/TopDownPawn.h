@@ -13,9 +13,15 @@
 #include "Player/PlayerResourceState.h"
 #include "Grid/GridManager.h"
 #include "Grid/BuildManager.h"
+#include "Blueprint/UserWidget.h"
 #include "TopDownPawn.generated.h"
 
+
+// forward declaretion for pausemeny
+class UPauseMenuWidget;
+
 // this should not have so much code, however to late to change i think
+// should have modularized a lot of the .cpp code, however i dont have time...
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATopDownPawn : public APawn
 {
@@ -66,12 +72,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	bool bInvertedScrollDirection;
 
+	// pause menu stiff
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UPauseMenuWidget> PauseMenuClass;
+
+	UPROPERTY()
+	UPauseMenuWidget* PauseMenuInstance;
+
 	// Public functions
 	UFUNCTION()
 	void ToggleBuildMode();
 
 	UFUNCTION()
 	void ToggleDeleteMode();
+
+	UFUNCTION()
+	void TogglePause();
 
 protected:
 	virtual void Tick(float DeltaTime) override;
@@ -82,6 +98,7 @@ protected:
 	bool bCameraRotationActive;
 	bool bCameraInterpolationActive;
 	bool bGodViewEnabled;
+	bool bPauseMenuToggle;
 	FVector2D ViewportCenter;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Mode")
@@ -106,14 +123,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleBuildMode;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Inputs|Keyboard")
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleDeleteMode;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input|Keyboard")
+	class UInputAction* IA_TogglePauseMode;
 
 	UPROPERTY(EditAnywhere, Category = "Input|Keyboard")
 	class UInputAction* IA_ToggleView;
 
 	UPROPERTY(EditAnywhere, Category = "Input|Mouse")
 	class UInputAction* IA_Zoom;
+
 
 private:
 	UFUNCTION()

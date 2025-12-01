@@ -27,9 +27,6 @@ class TOWERDEFENCEPROJECT_API AStandardProjectile : public AActor
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* StaticMeshComp;
 
-	UPROPERTY(VisibleAnywhere)
-	ATestTower* Tower;
-
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 500.0f;
 
@@ -55,7 +52,7 @@ public:
 	void Spawn(ATestTower* SpawnTower);
 
 	void Disable();
-	void Enable(ATestTower* SpawnTower, FRotator Direction);
+	void Enable(ATestTower* SpawnTower, FVector Direction);
 
 protected:
 	// Called when the game starts or when spawned
