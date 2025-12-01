@@ -31,6 +31,8 @@ AEnemyBase::AEnemyBase()
 void AEnemyBase::BeginPlay()
 {
     Super::BeginPlay();
+
+    Health = MaxHealth;
 }
 
 void AEnemyBase::InitializeEnemy(AEnemyHandler* InEnemyHandler, const FVector& InTargetLocation)
@@ -44,6 +46,23 @@ void AEnemyBase::InitializeEnemy(AEnemyHandler* InEnemyHandler, const FVector& I
     }
 
     RequestPath();
+}
+
+void AEnemyBase::ApplyDamage(float Amount)
+{
+    if (Amount <= 0.f) return;
+
+    Health -= Amount;
+
+    if (Health <= 0.f)
+    {
+        Health = 0.f;
+
+        // Broadcast death event
+        OnEnemyKilled.Broadcast(GoldReward);
+
+        Destroy();
+    }
 }
 
 void AEnemyBase::RequestPath()
@@ -79,6 +98,7 @@ void AEnemyBase::Tick(float DeltaTime)
 
     MoveAlongPath(DeltaTime);
     
+    /*
     //FROM PHILIP, SHOWS RANGE OF HITBOX, FOR DEBUGGING
     DrawDebugSphere(
                 GetWorld(),
@@ -91,6 +111,7 @@ void AEnemyBase::Tick(float DeltaTime)
                 0,
                 2.f
             );
+    */
 }
 
 void AEnemyBase::MoveAlongPath(float DeltaTime)
@@ -105,9 +126,6 @@ void AEnemyBase::MoveAlongPath(float DeltaTime)
 
     FVector ToTarget = CurrentTarget - Location;
     float Distance = ToTarget.Size();
-
-    //Debug: draw lines (optional)
-    DrawDebugSphere(GetWorld(), CurrentTarget, 15.f, 8, FColor::Yellow, false, -1, 0, 1);
 
     if (Distance < WaypointAcceptanceRadius)
     {
