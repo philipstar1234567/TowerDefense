@@ -1,5 +1,6 @@
 #include "EnemyBase.h"
 #include "EnemyHandler.h"
+#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SphereComponent.h"
@@ -15,13 +16,13 @@ AEnemyBase::AEnemyBase()
     
     // Creates Collision Component as a sphere and attaches it to the root
     CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
+    RootComponent = CollisionComp;
     CollisionComp->SetCollisionProfileName(TEXT("Pawn"));
-    CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     CollisionComp->SetGenerateOverlapEvents(true);
     CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     CollisionComp->InitSphereRadius(100.0f);
-    CollisionComp->SetupAttachment(RootComponent);
     
 }
 
@@ -75,6 +76,19 @@ void AEnemyBase::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     MoveAlongPath(DeltaTime);
+    
+    //FROM PHILIP, SHOWS RANGE OF HITBOX, FOR DEBUGGING
+    DrawDebugSphere(
+                GetWorld(),
+                CollisionComp->GetComponentLocation(),
+                CollisionComp->GetScaledSphereRadius(),
+                24,
+                FColor::Red,
+                false,
+                -1.f,
+                0,
+                2.f
+            );
 }
 
 void AEnemyBase::MoveAlongPath(float DeltaTime)

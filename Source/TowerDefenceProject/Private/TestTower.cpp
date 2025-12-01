@@ -2,7 +2,7 @@
 
 
 #include "TestTower.h"
-
+#include "DrawDebugHelpers.h"
 #include "AudioDevice.h"
 #include "EnemyBase.h"
 #include "StandardProjectile.h"
@@ -16,7 +16,7 @@
 ATestTower::ATestTower()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	
 	//TowerRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TowerRoot"));
 	//TowerRoot->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
@@ -26,12 +26,11 @@ ATestTower::ATestTower()
 	EnemyDetector = CreateDefaultSubobject<USphereComponent>(TEXT("EnemyDetector"));
 	EnemyDetector->InitSphereRadius(Range);
 	RootComponent = EnemyDetector;
-	EnemyDetector->BodyInstance.SetCollisionProfileName(TEXT("Trigger"));
+	EnemyDetector->SetCollisionProfileName(TEXT("Trigger"));
 	EnemyDetector->SetGenerateOverlapEvents(true);
 	EnemyDetector->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
 	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
-	RootComponent = EnemyDetector;
 	//Here you have to set the collision profile, and make sure the collision type matches in the enemybase class
 }
 
@@ -113,7 +112,7 @@ void ATestTower::BeginPlay()
 	if (BPTowerMesh)
 	{
 		BPTowerMesh->SetupAttachment(RootComponent);
-		BPTowerMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		BPTowerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //CHANGE FOR UI
 		BPTowerMesh->SetGenerateOverlapEvents(true);
 		BPTowerMesh->SetCollisionResponseToAllChannels(ECR_Block);
 		BPTowerMesh->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
@@ -153,7 +152,17 @@ void ATestTower::BeginPlay()
 void ATestTower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+	DrawDebugSphere(
+				GetWorld(),
+				EnemyDetector->GetComponentLocation(),
+				EnemyDetector->GetScaledSphereRadius(),
+				24,                      // smoothness
+				FColor::Green,
+				false,                   // not persistent, redraw each frame
+				-1.f,                    // duration (-1 = one frame if persistent false)
+				0,
+				2.f                      // line thickness
+			);
 	
 }
 

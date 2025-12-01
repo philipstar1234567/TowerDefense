@@ -64,7 +64,7 @@ public:
 	float FireRate = 1.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
-	float Range = 100.0f;
+	float Range = 400.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	float Strength = 1.0f;

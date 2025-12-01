@@ -59,6 +59,7 @@ private:
     FTimerHandle SpawnTimerHandle;
 
     void SpawnNextEnemy();
+    UFUNCTION()
     void OnEnemyDestroyed(AActor* DestroyedActor);
     void EndWave();
 
