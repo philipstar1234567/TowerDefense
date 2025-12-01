@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HUD/EndGameWidget.h"
 #include "WaveManager.generated.h"
 
 class AGridManager;
@@ -34,6 +35,9 @@ public:
     AWaveManager();
     virtual void BeginPlay() override;
     
+    UPROPERTY(EditAnywhere, Category = "UI")
+    TSubclassOf<class UEndGameWidget> EndGameWidgetClass;
+
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnAllWavesCompletedDelegate OnAllWavesCompleted;
 

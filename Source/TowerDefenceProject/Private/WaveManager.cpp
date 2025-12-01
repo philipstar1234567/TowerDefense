@@ -173,6 +173,15 @@ void AWaveManager::EndWave()
     {
         UE_LOG(LogTemp, Log, TEXT("WaveManager: All waves completed!"));
         OnAllWavesCompleted.Broadcast();
+
+        APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+        if (!PC) return;
+        if (!EndGameWidgetClass) return;
+
+        UEndGameWidget* EndGameWidget = CreateWidget<UEndGameWidget>(PC, EndGameWidgetClass);
+        EndGameWidget->bWinning = true;
+        EndGameWidget->SetIsFocusable(true);
+        EndGameWidget->AddToViewport();
     }
 }
 
