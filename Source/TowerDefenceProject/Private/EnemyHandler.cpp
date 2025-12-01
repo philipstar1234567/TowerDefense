@@ -1,6 +1,7 @@
 #include "EnemyHandler.h"
 #include "Kismet/GameplayStatics.h"
 #include "Grid/GridManager.h"
+#include "Grid/BuildManager.h"
 #include "EnemyBase.h"
 #include "Algo/Reverse.h"
 
@@ -14,6 +15,8 @@ void AEnemyHandler::BeginPlay()
     Super::BeginPlay();
 
     GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this, &AEnemyHandler::TryFindGridManager, 0.1f, true);
+
+    GetWorldTimerManager().SetTimer(TryFindBuildManagerHandle, this, &AEnemyHandler::TryFindBuildManager, 0.1f, true);
 }
 
 void AEnemyHandler::TryFindGridManager()
@@ -29,6 +32,26 @@ void AEnemyHandler::TryFindGridManager()
             UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
 
             GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
+        }
+    }
+}
+
+void AEnemyHandler::TryFindBuildManager()
+{
+    if (BuildManager == nullptr)
+    {
+        BuildManager = Cast<ABuildManager>(
+            UGameplayStatics::GetActorOfClass(this, ABuildManager::StaticClass())
+        );
+
+        if (BuildManager)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
+
+            BuildManager->OnTowerPlaced.AddDynamic(this, &AEnemyHandler::NotifyGridChanged);
+            BuildManager->OnTowerDeleted.AddDynamic(this, &AEnemyHandler::NotifyGridChanged);
+
+            GetWorldTimerManager().ClearTimer(TryFindBuildManagerHandle);
         }
     }
 }
@@ -50,7 +73,7 @@ void AEnemyHandler::UnregisterEnemy(AEnemyBase* Enemy)
     }
 }
 
-void AEnemyHandler::NotifyGridChanged()
+void AEnemyHandler::NotifyGridChanged(FVector2D loc, int32 cost)
 {
     for (int32 i = RegisteredEnemies.Num() - 1; i >= 0; --i)
     {
@@ -216,7 +239,7 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
                 OpenList.Add(newIdx);
             }
         }
-    } // end while
+    }
 
     if (FoundGoalIdx == INDEX_NONE)
     {

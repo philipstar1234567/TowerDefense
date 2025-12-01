@@ -36,14 +36,22 @@ public:
     void StartWave(int32 WaveIndex);
 
     FTimerHandle TryFindGridManagerHandle;
+    FTimerHandle TryFindPlayerResourceStateHandle;
 
     UFUNCTION()
     void TryFindGridManager();
+
+    UFUNCTION()
+    void TryFindPlayerResourceState();
+
     void InitializeWaveManager();
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     AGridManager* GridManager = nullptr;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
+    APlayerResourceState* PlayerResourceState = nullptr;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     AEnemyHandler* EnemyHandler = nullptr;

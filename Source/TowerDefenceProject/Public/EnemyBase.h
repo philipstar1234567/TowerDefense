@@ -7,6 +7,8 @@
 class AEnemyHandler;
 class USphereComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyFinishedDelegate, int32, DamageAmount);
+
 UCLASS()
 class TOWERDEFENCEPROJECT_API AEnemyBase : public AActor
 {
@@ -29,6 +31,12 @@ public:
     /** Component to check for collisions with TestTower's EnemyDetector and StandardProjectile */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USphereComponent* CollisionComp;
+
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnEnemyFinishedDelegate OnEnemyFinished;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int32 GoalDamage = 1;
 
 protected:
     /** The path returned by EnemyHandler (list of world points) */

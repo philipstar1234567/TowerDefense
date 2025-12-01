@@ -29,7 +29,7 @@ public:
 
 	// Starting Values
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Properties")
-	int32 StartingGold = 200;
+	int32 StartingGold = 1000000;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Properties")
 	int32 StartingHealth = 10;
@@ -53,6 +53,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int32 GetHealthAmount();
+
+	UFUNCTION()
+	void HandleEnemyFinished(int32 dmg);
 
 private:
 	// --- Variables ---
