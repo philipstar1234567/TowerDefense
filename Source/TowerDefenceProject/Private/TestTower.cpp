@@ -3,6 +3,7 @@
 
 #include "TestTower.h"
 
+#include "AudioDevice.h"
 #include "EnemyBase.h"
 #include "StandardProjectile.h"
 #include "TimerManager.h"
@@ -25,12 +26,18 @@ ATestTower::ATestTower()
 	EnemyDetector = CreateDefaultSubobject<USphereComponent>(TEXT("EnemyDetector"));
 	EnemyDetector->InitSphereRadius(Range);
 	RootComponent = EnemyDetector;
-	EnemyDetector->BodyInstance.SetCollisionProfileName(TEXT("Pawn"));
+	EnemyDetector->BodyInstance.SetCollisionProfileName(TEXT("Trigger"));
 	EnemyDetector->SetGenerateOverlapEvents(true);
+	EnemyDetector->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
 	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
 	RootComponent = EnemyDetector;
 	//Here you have to set the collision profile, and make sure the collision type matches in the enemybase class
+}
+
+void ATestTower::SetPreviewMode(bool bIsPreview)
+{
+	UE_LOG(LogTemp, Log, TEXT("ATestTower::SetPreviewMode ran succesfully"));
 }
 
 void ATestTower::Test() //REMOVE

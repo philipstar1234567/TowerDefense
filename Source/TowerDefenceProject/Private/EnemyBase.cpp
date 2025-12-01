@@ -19,6 +19,7 @@ AEnemyBase::AEnemyBase()
     CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     CollisionComp->SetGenerateOverlapEvents(true);
     CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     CollisionComp->InitSphereRadius(100.0f);
     CollisionComp->SetupAttachment(RootComponent);
     

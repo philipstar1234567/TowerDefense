@@ -25,6 +25,17 @@ public:
 	// Sets default values for this actor's properties
 	ATestTower();
 	
+	// Halvor
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tower Stats|Economy")
+	int32 TowerCost = 100;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Tower")
+	int32 GetTowerCost() const { return TowerCost; }
+	
+	// Preview hook: BP override for translucent/outline
+	UFUNCTION(BlueprintCallable, Category = "Tower")
+	virtual void SetPreviewMode(bool bIsPreview);
+	
 	void Test(); //REMOVE
 	
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
