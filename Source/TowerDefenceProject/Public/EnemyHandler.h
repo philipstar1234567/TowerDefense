@@ -5,6 +5,7 @@
 #include "EnemyHandler.generated.h"
 
 class AGridManager;
+class ABuildManager;
 class AEnemyBase;
 
 /**
@@ -20,23 +21,30 @@ public:
 
     virtual void BeginPlay() override;
 
-    /** Assign the GridManager in editor or it will try to auto-find in BeginPlay */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
+    UPROPERTY()
     AGridManager* GridManager = nullptr;
+
+    UPROPERTY()
+    ABuildManager* BuildManager = nullptr;
 
     /** Finds a path from StartWorld to EndWorld (tile-aware). Returns true and fills OutPath if successful. */
     UFUNCTION(BlueprintCallable, Category = "Pathfinding")
     bool FindPath(const FVector& StartWorld, const FVector& EndWorld, TArray<FVector>& OutPath);
 
-    /** Register/unregister enemies to be notified on grid changes (optional feature). */
     void RegisterEnemy(AEnemyBase* Enemy);
     void UnregisterEnemy(AEnemyBase* Enemy);
-    void NotifyGridChanged();
+
+    UFUNCTION()
+    void NotifyGridChanged(FVector2D loc, int32 cost);
 
     FTimerHandle TryFindGridManagerHandle;
+    FTimerHandle TryFindBuildManagerHandle;
 
     UFUNCTION()
     void TryFindGridManager();
+    
+    UFUNCTION()
+    void TryFindBuildManager();
 
 protected:
     // Internal A* node
