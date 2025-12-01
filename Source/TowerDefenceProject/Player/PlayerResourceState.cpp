@@ -71,3 +71,8 @@ int32 APlayerResourceState::GetHealthAmount()
 {
 	return Health;
 }
+
+void APlayerResourceState::HandleEnemyFinished(int32 damage)
+{
+	APlayerResourceState::ApplyDamage(damage);
+}

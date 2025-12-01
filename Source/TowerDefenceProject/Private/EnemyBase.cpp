@@ -109,13 +109,16 @@ void AEnemyBase::MoveAlongPath(float DeltaTime)
 
     if (Distance < WaypointAcceptanceRadius)
     {
-        // Reached this waypoint � move to next
+        // Reached this waypoint -> move to next
         CurrentPathIndex++;
 
-        // If we reached the last waypoint, we�re at the goal
+        // If we reached the last waypoint, we're at the goal
         if (CurrentPathIndex >= CurrentPath.Num())
         {
             UE_LOG(LogTemp, Log, TEXT("%s reached the goal!"), *GetName());
+
+            OnEnemyFinished.Broadcast(GoalDamage);
+
             Destroy(); // remove enemy or trigger event
             return;
         }

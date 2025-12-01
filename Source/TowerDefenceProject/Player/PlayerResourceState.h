@@ -54,6 +54,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int32 GetHealthAmount();
 
+	UFUNCTION()
+	void HandleEnemyFinished(int32 dmg);
+
 private:
 	// --- Variables ---
 	UPROPERTY()

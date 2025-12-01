@@ -5,6 +5,7 @@
 #include "EnemyHandler.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
+#include "Player/PlayerResourceState.h"
 
 AWaveManager::AWaveManager()
 {
@@ -16,6 +17,7 @@ void AWaveManager::BeginPlay()
     Super::BeginPlay();
 
     GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this, &AWaveManager::TryFindGridManager, 0.1f, true);
+    GetWorldTimerManager().SetTimer(TryFindPlayerResourceStateHandle, this, &AWaveManager::TryFindPlayerResourceState, 0.1f, true);
 }
 
 void AWaveManager::TryFindGridManager()
@@ -29,6 +31,20 @@ void AWaveManager::TryFindGridManager()
             UE_LOG(LogTemp, Warning, TEXT("WaveManager: Found GridManager after spawn."));
             InitializeWaveManager();  // ← move your setup logic here
 
+            // stop timer
+            GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
+        }
+    }
+}
+
+void AWaveManager::TryFindPlayerResourceState()
+{
+    if (PlayerResourceState == nullptr)
+    {
+        PlayerResourceState = Cast<APlayerResourceState>(UGameplayStatics::GetActorOfClass(this, APlayerResourceState::StaticClass()));
+
+        if (PlayerResourceState)
+        {
             // stop timer
             GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
         }
@@ -120,6 +136,7 @@ void AWaveManager::SpawnNextEnemy()
     {
         NewEnemy->InitializeEnemy(EnemyHandler, GoalWorld);
         NewEnemy->OnDestroyed.AddDynamic(this, &AWaveManager::OnEnemyDestroyed);
+        NewEnemy->OnEnemyFinished.AddDynamic(PlayerResourceState, &APlayerResourceState::HandleEnemyFinished);
         EnemiesSpawnedThisWave++;
         EnemiesAlive++;
     }
