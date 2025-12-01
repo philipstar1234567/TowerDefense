@@ -14,12 +14,12 @@ void AEnemyHandler::BeginPlay()
 {
     Super::BeginPlay();
 
-    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this, &AEnemyHandler::TryFindGridManager, 0.1f, true);
+    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle1, this, &AEnemyHandler::TryFindGridManager1, 0.1f, true);
 
     GetWorldTimerManager().SetTimer(TryFindBuildManagerHandle, this, &AEnemyHandler::TryFindBuildManager, 0.1f, true);
 }
 
-void AEnemyHandler::TryFindGridManager()
+void AEnemyHandler::TryFindGridManager1()
 {
     if (GridManager == nullptr)
     {
@@ -31,7 +31,7 @@ void AEnemyHandler::TryFindGridManager()
         {
             UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
 
-            GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
+            GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle1);
         }
     }
 }
@@ -46,7 +46,7 @@ void AEnemyHandler::TryFindBuildManager()
 
         if (BuildManager)
         {
-            UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
+            UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found BuildManager after spawn."));
 
             BuildManager->OnTowerPlaced.AddDynamic(this, &AEnemyHandler::NotifyGridChanged);
             BuildManager->OnTowerDeleted.AddDynamic(this, &AEnemyHandler::NotifyGridChanged);
