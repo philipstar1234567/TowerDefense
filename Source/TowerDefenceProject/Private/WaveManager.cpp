@@ -138,6 +138,7 @@ void AWaveManager::SpawnNextEnemy()
         NewEnemy->InitializeEnemy(EnemyHandler, GoalWorld);
         NewEnemy->OnDestroyed.AddDynamic(this, &AWaveManager::OnEnemyDestroyed);
         NewEnemy->OnEnemyFinished.AddDynamic(PlayerResourceState, &APlayerResourceState::HandleEnemyFinished);
+        NewEnemy->OnEnemyKilled.AddDynamic(PlayerResourceState, &APlayerResourceState::AddGold);
         EnemiesSpawnedThisWave++;
         EnemiesAlive++;
     }
