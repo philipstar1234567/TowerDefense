@@ -26,9 +26,13 @@ ATestTower::ATestTower()
 	EnemyDetector = CreateDefaultSubobject<USphereComponent>(TEXT("EnemyDetector"));
 	EnemyDetector->InitSphereRadius(Range);
 	RootComponent = EnemyDetector;
-	EnemyDetector->SetCollisionProfileName(TEXT("Trigger"));
+	//EnemyDetector->SetCollisionObjectType(ECC_WorldDynamic);
+	EnemyDetector->SetCollisionProfileName(TEXT("Tower"));
 	EnemyDetector->SetGenerateOverlapEvents(true);
-	EnemyDetector->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//EnemyDetector->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	//EnemyDetector->SetCollisionResponseToAllChannels(ECR_Ignore);
+	//EnemyDetector->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	//EnemyDetector->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
 	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
 	//Here you have to set the collision profile, and make sure the collision type matches in the enemybase class
@@ -78,7 +82,7 @@ void ATestTower::OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* Found
 			-1,                     // Key: -1 means add a new message each time
 			5.0f,                   // Time to display in seconds
 			FColor::Yellow,         // Text color
-			TEXT("Overlap event generated!") // Message text
+			TEXT("Overlap event generated! Enemy entered") // Message text
 		);
 	if (Cast<AEnemyBase>(FoundActor))
 	{
@@ -98,6 +102,12 @@ void ATestTower::OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* Found
  */
 void ATestTower::OnEnemyLost(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex)
 {
+	GEngine->AddOnScreenDebugMessage(
+			-1,                     // Key: -1 means add a new message each time
+			5.0f,                   // Time to display in seconds
+			FColor::Yellow,         // Text color
+			TEXT("Overlap event generated! Enemy Left") // Message text
+		);
 	if (Cast<AEnemyBase>(FoundActor))
 	{
 		EnemyArray.Remove(Cast<AEnemyBase>(FoundActor));
@@ -111,11 +121,11 @@ void ATestTower::BeginPlay()
 
 	if (BPTowerMesh)
 	{
-		BPTowerMesh->SetupAttachment(RootComponent);
-		BPTowerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //CHANGE FOR UI
-		BPTowerMesh->SetGenerateOverlapEvents(true);
-		BPTowerMesh->SetCollisionResponseToAllChannels(ECR_Block);
-		BPTowerMesh->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
+		//BPTowerMesh->SetupAttachment(RootComponent);
+		//BPTowerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //CHANGE FOR UI
+		//BPTowerMesh->SetGenerateOverlapEvents(true);
+		//BPTowerMesh->SetCollisionResponseToAllChannels(ECR_Block);
+		//BPTowerMesh->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
 	}
 	else
 	{

@@ -17,11 +17,13 @@ AEnemyBase::AEnemyBase()
     // Creates Collision Component as a sphere and attaches it to the root
     CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
     RootComponent = CollisionComp;
-    CollisionComp->SetCollisionProfileName(TEXT("Pawn"));
-    CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    CollisionComp->SetCollisionProfileName(TEXT("Enemy"));
+    //CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     CollisionComp->SetGenerateOverlapEvents(true);
-    CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+    //CollisionComp->SetCollisionObjectType(ECC_WorldDynamic);
+    //CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+    //CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    //CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     CollisionComp->InitSphereRadius(100.0f);
     
 }

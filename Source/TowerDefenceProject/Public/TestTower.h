@@ -15,6 +15,7 @@ class ATowerTreeManager;
 class AEnemyBase;
 class USphereComponent;
 class USceneComponent;
+class UCollisionSphere;
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATestTower : public AActor
