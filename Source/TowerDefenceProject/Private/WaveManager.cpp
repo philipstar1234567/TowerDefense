@@ -17,6 +17,7 @@ void AWaveManager::BeginPlay()
     Super::BeginPlay();
 
     GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this, &AWaveManager::TryFindGridManager, 0.1f, true);
+
     GetWorldTimerManager().SetTimer(TryFindPlayerResourceStateHandle, this, &AWaveManager::TryFindPlayerResourceState, 0.1f, true);
 }
 
@@ -29,7 +30,7 @@ void AWaveManager::TryFindGridManager()
         if (GridManager)
         {
             UE_LOG(LogTemp, Warning, TEXT("WaveManager: Found GridManager after spawn."));
-            InitializeWaveManager();  // ← move your setup logic here
+            InitializeWaveManager();
 
             // stop timer
             GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
@@ -46,7 +47,7 @@ void AWaveManager::TryFindPlayerResourceState()
         if (PlayerResourceState)
         {
             // stop timer
-            GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
+            GetWorldTimerManager().ClearTimer(TryFindPlayerResourceStateHandle);
         }
     }
 }

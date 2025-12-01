@@ -35,15 +35,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Waves")
     void StartWave(int32 WaveIndex);
 
-    FTimerHandle TryFindGridManagerHandle;
-    FTimerHandle TryFindPlayerResourceStateHandle;
-
     UFUNCTION()
     void TryFindGridManager();
 
     UFUNCTION()
     void TryFindPlayerResourceState();
 
+    UFUNCTION()
     void InitializeWaveManager();
 
 protected:
@@ -58,6 +56,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waves")
     TArray<FEnemyWaveData> Waves;
+
+    FTimerHandle TryFindGridManagerHandle;
+    FTimerHandle TryFindPlayerResourceStateHandle;
 
 private:
     int32 CurrentWaveIndex = -1;

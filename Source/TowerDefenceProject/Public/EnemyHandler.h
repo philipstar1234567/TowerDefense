@@ -21,10 +21,10 @@ public:
 
     virtual void BeginPlay() override;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     AGridManager* GridManager = nullptr;
 
-    UPROPERTY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     ABuildManager* BuildManager = nullptr;
 
     /** Finds a path from StartWorld to EndWorld (tile-aware). Returns true and fills OutPath if successful. */
@@ -37,11 +37,9 @@ public:
     UFUNCTION()
     void NotifyGridChanged(FVector2D loc, int32 cost);
 
-    FTimerHandle TryFindGridManagerHandle;
-    FTimerHandle TryFindBuildManagerHandle;
 
     UFUNCTION()
-    void TryFindGridManager();
+    void TryFindGridManager1();
     
     UFUNCTION()
     void TryFindBuildManager();
@@ -62,4 +60,7 @@ protected:
 
     bool IsTileWalkable(int32 X, int32 Y) const;
     TArray<FIntPoint> GetNeighbors4(const FIntPoint& P) const;
+
+    FTimerHandle TryFindGridManagerHandle1;
+    FTimerHandle TryFindBuildManagerHandle;
 };
