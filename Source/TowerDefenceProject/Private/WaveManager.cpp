@@ -15,8 +15,7 @@ void AWaveManager::BeginPlay()
 {
     Super::BeginPlay();
 
-    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this,
-        &AWaveManager::TryFindGridManager, 0.1f, true);
+    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this, &AWaveManager::TryFindGridManager, 0.1f, true);
 }
 
 void AWaveManager::TryFindGridManager()

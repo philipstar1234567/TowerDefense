@@ -9,7 +9,7 @@ AEnemyBase::AEnemyBase()
     PrimaryActorTick.bCanEverTick = true;
 
     MoveSpeed = 100.f;             
-    WaypointAcceptanceRadius = 5.f;
+    WaypointAcceptanceRadius = 4.f;
     CurrentPathIndex = 0;
     EnemyHandler = nullptr;
     
@@ -90,8 +90,8 @@ void AEnemyBase::MoveAlongPath(float DeltaTime)
     FVector ToTarget = CurrentTarget - Location;
     float Distance = ToTarget.Size();
 
-    // Debug: draw lines (optional)
-    // DrawDebugSphere(GetWorld(), CurrentTarget, 15.f, 8, FColor::Yellow, false, -1, 0, 1);
+    //Debug: draw lines (optional)
+    DrawDebugSphere(GetWorld(), CurrentTarget, 15.f, 8, FColor::Yellow, false, -1, 0, 1);
 
     if (Distance < WaypointAcceptanceRadius)
     {
