@@ -6,7 +6,9 @@
 #include "AudioDevice.h"
 #include "EnemyBase.h"
 #include "StandardProjectile.h"
+#include "Player/TopDownPawn.h"
 #include "TimerManager.h"
+#include "UpgradeTreeUI.h"
 #include "ProjectilePool.h"
 #include "TowerTreeManager.h"
 #include "Components/SphereComponent.h"
@@ -58,9 +60,11 @@ void ATestTower::Test() //REMOVE
  */
 void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed)
 {
-	if (GEngine)
+	if (TopDownPawn->CurrentMode == EGameMode::None)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Green, TEXT("Mesh Clicked!"));
+		UUpgradeTreeUI* UpgradeTreeUI = CreateWidget<UUpgradeTreeUI>(this, UUpgradeTreeUI::StaticClass());
+		UpgradeTreeUI->Tower = this;
+		UpgradeTreeUI->AddToViewport();
 	}
 }
 
@@ -119,17 +123,30 @@ void ATestTower::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (BPTowerMesh)
+	if (BPCube)
 	{
-		//BPTowerMesh->SetupAttachment(RootComponent);
-		//BPTowerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); //CHANGE FOR UI
-		//BPTowerMesh->SetGenerateOverlapEvents(true);
-		//BPTowerMesh->SetCollisionResponseToAllChannels(ECR_Block);
-		//BPTowerMesh->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
+		BPCube->SetupAttachment(RootComponent);
+		BPCube->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //CHANGE FOR UI
+		BPCube->SetGenerateOverlapEvents(true);
+		BPCube->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+		BPCube->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BPTowerMesh hasn't loaded yet"));
+		UE_LOG(LogTemp, Warning, TEXT("BPCube hasn't loaded yet"));
+	}
+	
+	if (BPSphere)
+	{
+		BPSphere->SetupAttachment(RootComponent);
+		BPSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //CHANGE FOR UI
+		BPSphere->SetGenerateOverlapEvents(true);
+		BPSphere->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+		BPSphere->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BPSphere hasn't loaded yet"));
 	}
 	
 	ResetTimer();
@@ -153,6 +170,15 @@ void ATestTower::BeginPlay()
 	{
 		TowerTreeManager = GetWorld()->SpawnActor<ATowerTreeManager>(FVector(0, 0, -300), FRotator(0, 0, 0));
 		UE_LOG(LogTemp, Log, TEXT("TowerTreeManager created"));
+	}
+	
+	if (Cast<ATopDownPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ATopDownPawn::StaticClass())))
+	{
+		TopDownPawn = Cast<ATopDownPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ATopDownPawn::StaticClass()));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn could not be found!"));
 	}
 
 	

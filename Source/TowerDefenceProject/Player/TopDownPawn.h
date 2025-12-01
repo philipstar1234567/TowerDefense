@@ -88,6 +88,9 @@ public:
 
 	UFUNCTION()
 	void TogglePause();
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Mode")
+	EGameMode CurrentMode = EGameMode::None;
 
 protected:
 	virtual void Tick(float DeltaTime) override;
@@ -100,9 +103,6 @@ protected:
 	bool bGodViewEnabled;
 	bool bPauseMenuToggle;
 	FVector2D ViewportCenter;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Mode")
-	EGameMode CurrentMode = EGameMode::None;
 
 	// Input Mapping Context and Input Actions
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
