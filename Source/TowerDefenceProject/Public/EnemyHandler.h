@@ -33,6 +33,11 @@ public:
     void UnregisterEnemy(AEnemyBase* Enemy);
     void NotifyGridChanged();
 
+    FTimerHandle TryFindGridManagerHandle;
+
+    UFUNCTION()
+    void TryFindGridManager();
+
 protected:
     // Internal A* node
     struct FPathNode

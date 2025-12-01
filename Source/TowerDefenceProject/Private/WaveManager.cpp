@@ -1,4 +1,4 @@
-#include "WaveManager.h"
+﻿#include "WaveManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Grid/GridManager.h"
 #include "EnemyBase.h"
@@ -9,16 +9,35 @@
 AWaveManager::AWaveManager()
 {
     PrimaryActorTick.bCanEverTick = false;
-    CurrentWaveIndex = -1;
 }
 
 void AWaveManager::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!GridManager)
-        GridManager = Cast<AGridManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
+    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this,
+        &AWaveManager::TryFindGridManager, 0.1f, true);
+}
 
+void AWaveManager::TryFindGridManager()
+{
+    if (GridManager == nullptr)
+    {
+        GridManager = Cast<AGridManager>(UGameplayStatics::GetActorOfClass(this, AGridManager::StaticClass()));
+
+        if (GridManager)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("WaveManager: Found GridManager after spawn."));
+            InitializeWaveManager();  // ← move your setup logic here
+
+            // stop timer
+            GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
+        }
+    }
+}
+
+void AWaveManager::InitializeWaveManager()
+{
     if (!EnemyHandler)
         EnemyHandler = Cast<AEnemyHandler>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyHandler::StaticClass()));
 
@@ -27,17 +46,16 @@ void AWaveManager::BeginPlay()
         UE_LOG(LogTemp, Error, TEXT("WaveManager: Missing GridManager!"));
         return;
     }
+
     if (!EnemyHandler)
     {
         UE_LOG(LogTemp, Error, TEXT("WaveManager: Missing EnemyHandler!"));
         return;
     }
 
-    // auto-start first wave if configured
+    // Auto-start first wave
     if (Waves.Num() > 0)
-    {
         StartWave(0);
-    }
 }
 
 void AWaveManager::StartWave(int32 WaveIndex)
@@ -48,10 +66,10 @@ void AWaveManager::StartWave(int32 WaveIndex)
         return;
     }
 
-    FVector SpawnWorld, TargetWorld;
-    if (!GetTileWorldPositions(SpawnWorld, TargetWorld))
+    FVector SpawnWorld, GoalWorld;
+    if (!GetWorldSpawnAndGoal(SpawnWorld, GoalWorld))
     {
-        UE_LOG(LogTemp, Error, TEXT("WaveManager: Invalid spawn/target tiles (%d,%d)->(%d,%d)"), SpawnTile.X, SpawnTile.Y, TargetTile.X, TargetTile.Y);
+        UE_LOG(LogTemp, Error, TEXT("WaveManager: GridManager SpawnTile/GoalTile are invalid or uninitialized!"));
         return;
     }
 
@@ -62,12 +80,13 @@ void AWaveManager::StartWave(int32 WaveIndex)
     const float Interval = FMath::Max(0.05f, Waves[WaveIndex].SpawnInterval);
     GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AWaveManager::SpawnNextEnemy, Interval, true);
 
-    UE_LOG(LogTemp, Log, TEXT("WaveManager: Started wave %d from (%d,%d) to (%d,%d)"), WaveIndex, SpawnTile.X, SpawnTile.Y, TargetTile.X, TargetTile.Y);
+    UE_LOG(LogTemp, Log, TEXT("WaveManager: Started wave %d"), WaveIndex);
 }
 
 void AWaveManager::SpawnNextEnemy()
 {
     if (!Waves.IsValidIndex(CurrentWaveIndex)) return;
+
     const FEnemyWaveData& Wave = Waves[CurrentWaveIndex];
 
     if (EnemiesSpawnedThisWave >= Wave.EnemyCount)
@@ -77,8 +96,13 @@ void AWaveManager::SpawnNextEnemy()
         return;
     }
 
-    FVector SpawnWorld, TargetWorld;
-    if (!GetTileWorldPositions(SpawnWorld, TargetWorld)) return;
+    FVector SpawnWorld, GoalWorld;
+    if (!GetWorldSpawnAndGoal(SpawnWorld, GoalWorld))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("WaveManager: Spawn/Goal invalid during spawn step; stopping spawn timer."));
+        GetWorldTimerManager().ClearTimer(SpawnTimerHandle);
+        return;
+    }
 
     if (!Wave.EnemyClass)
     {
@@ -90,13 +114,12 @@ void AWaveManager::SpawnNextEnemy()
     FActorSpawnParameters Params;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-    // spawn above tile center to avoid collision with tile mesh
     FVector SpawnLoc = SpawnWorld + FVector(0.f, 0.f, 50.f);
 
     AEnemyBase* NewEnemy = GetWorld()->SpawnActor<AEnemyBase>(Wave.EnemyClass, SpawnLoc, FRotator::ZeroRotator, Params);
     if (NewEnemy)
     {
-        NewEnemy->InitializeEnemy(EnemyHandler, TargetWorld);
+        NewEnemy->InitializeEnemy(EnemyHandler, GoalWorld);
         NewEnemy->OnDestroyed.AddDynamic(this, &AWaveManager::OnEnemyDestroyed);
         EnemiesSpawnedThisWave++;
         EnemiesAlive++;
@@ -110,6 +133,7 @@ void AWaveManager::SpawnNextEnemy()
 void AWaveManager::OnEnemyDestroyed(AActor* DestroyedActor)
 {
     EnemiesAlive = FMath::Max(0, EnemiesAlive - 1);
+
     if (Waves.IsValidIndex(CurrentWaveIndex))
     {
         if (EnemiesSpawnedThisWave >= Waves[CurrentWaveIndex].EnemyCount && EnemiesAlive <= 0)
@@ -127,13 +151,27 @@ void AWaveManager::EndWave()
     EnemiesAlive = 0;
 }
 
-bool AWaveManager::GetTileWorldPositions(FVector& OutSpawnWorld, FVector& OutTargetWorld) const
+bool AWaveManager::GetWorldSpawnAndGoal(FVector& OutSpawn, FVector& OutGoal) const
 {
     if (!GridManager) return false;
-    if (!GridManager->IsValidTile(SpawnTile.X, SpawnTile.Y)) return false;
-    if (!GridManager->IsValidTile(TargetTile.X, TargetTile.Y)) return false;
 
-    OutSpawnWorld = GridManager->GetTileWorldLocation(SpawnTile.X, SpawnTile.Y);
-    OutTargetWorld = GridManager->GetTileWorldLocation(TargetTile.X, TargetTile.Y);
+    const FVector2D SpawnF = GridManager->SpawnTile;
+    const FVector2D GoalF = GridManager->GoalTile;
+
+    // Check if uninitialized
+    if (SpawnF.X < 0.f || SpawnF.Y < 0.f) return false;
+    if (GoalF.X < 0.f || GoalF.Y < 0.f) return false;
+
+    // Convert to integer tile indices (round to nearest)
+    const int32 SpawnX = FMath::RoundToInt(SpawnF.X);
+    const int32 SpawnY = FMath::RoundToInt(SpawnF.Y);
+    const int32 GoalX = FMath::RoundToInt(GoalF.X);
+    const int32 GoalY = FMath::RoundToInt(GoalF.Y);
+
+    if (!GridManager->IsValidTile(SpawnX, SpawnY)) return false;
+    if (!GridManager->IsValidTile(GoalX, GoalY)) return false;
+
+    OutSpawn = GridManager->GetTileWorldLocation(SpawnX, SpawnY);
+    OutGoal = GridManager->GetTileWorldLocation(GoalX, GoalY);
     return true;
 }

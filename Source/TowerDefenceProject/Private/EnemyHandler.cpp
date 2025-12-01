@@ -13,12 +13,22 @@ void AEnemyHandler::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!GridManager)
+    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle, this, &AEnemyHandler::TryFindGridManager, 0.1f, true);
+}
+
+void AEnemyHandler::TryFindGridManager()
+{
+    if (GridManager == nullptr)
     {
-        GridManager = Cast<AGridManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
-        if (!GridManager)
+        GridManager = Cast<AGridManager>(
+            UGameplayStatics::GetActorOfClass(this, AGridManager::StaticClass())
+        );
+
+        if (GridManager)
         {
-            UE_LOG(LogTemp, Error, TEXT("EnemyHandler: No GridManager found. Assign one in the editor or place a GridManager in the level."));
+            UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
+
+            GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle);
         }
     }
 }

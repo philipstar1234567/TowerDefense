@@ -30,11 +30,16 @@ class TOWERDEFENCEPROJECT_API AWaveManager : public AActor
 
 public:
     AWaveManager();
-
     virtual void BeginPlay() override;
 
     UFUNCTION(BlueprintCallable, Category = "Waves")
     void StartWave(int32 WaveIndex);
+
+    FTimerHandle TryFindGridManagerHandle;
+
+    UFUNCTION()
+    void TryFindGridManager();
+    void InitializeWaveManager();
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
@@ -43,12 +48,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "References")
     AEnemyHandler* EnemyHandler = nullptr;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
-    FIntPoint SpawnTile = FIntPoint(0, 0);
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
-    FIntPoint TargetTile = FIntPoint(0, 0);
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Waves")
     TArray<FEnemyWaveData> Waves;
 
@@ -56,12 +55,12 @@ private:
     int32 CurrentWaveIndex = -1;
     int32 EnemiesSpawnedThisWave = 0;
     int32 EnemiesAlive = 0;
+
     FTimerHandle SpawnTimerHandle;
 
     void SpawnNextEnemy();
-    UFUNCTION()
     void OnEnemyDestroyed(AActor* DestroyedActor);
     void EndWave();
 
-    bool GetTileWorldPositions(FVector& OutSpawnWorld, FVector& OutTargetWorld) const;
+    bool GetWorldSpawnAndGoal(FVector& OutSpawn, FVector& OutGoal) const;
 };
