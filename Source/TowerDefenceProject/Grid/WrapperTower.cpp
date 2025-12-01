@@ -28,9 +28,9 @@ AWrapperTower::AWrapperTower()
 			RealTower->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
 			// Give buildmanager something to see in preview mode
-			if (RealTower->BPCube && RealTower->BPCube->GetStaticMesh())
+			if (RealTower->BPTowerMesh && RealTower->BPTowerMesh->GetStaticMesh())
 			{
-				TowerMesh = RealTower->BPCube; // makes preview visible!
+				TowerMesh = RealTower->BPTowerMesh; // makes preview visible!
 			}
 			else if (RealTower->GetRootComponent() && RealTower->GetRootComponent()->IsA<UStaticMeshComponent>())
 			{
@@ -51,13 +51,13 @@ void AWrapperTower::SetPreviewMode(bool bIsPreview)
 		RealTower->SetActorScale3D(Scale);
 
 		// Make tower translucent in preview
-		if (bIsPreview && RealTower->BPCube)
+		if (bIsPreview && RealTower->BPTowerMesh)
 		{
-			RealTower->BPCube->SetScalarParameterValueOnMaterials(FName("IsPreview"), 1.0f);
+			RealTower->BPTowerMesh->SetScalarParameterValueOnMaterials(FName("IsPreview"), 1.0f);
 		}
-		else if (RealTower->BPCube)
+		else if (RealTower->BPTowerMesh)
 		{
-			RealTower->BPCube->SetScalarParameterValueOnMaterials(FName("IsPreview"), 0.0f);
+			RealTower->BPTowerMesh->SetScalarParameterValueOnMaterials(FName("IsPreview"), 0.0f);
 		}
 	}
 }

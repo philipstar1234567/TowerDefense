@@ -13,10 +13,6 @@
 void ATowerDefenceProjectPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	bEnableClickEvents = true;
-	FInputModeGameAndUI InputMode;
-	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-	SetInputMode(InputMode);
 
 	// only spawn touch controls on local player controllers
 	if (SVirtualJoystick::ShouldDisplayTouchInterface() && IsLocalPlayerController())

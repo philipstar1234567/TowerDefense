@@ -16,7 +16,6 @@ class AEnemyBase;
 class USphereComponent;
 class USceneComponent;
 class UCollisionSphere;
-class ATopDownPawn;
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATestTower : public AActor
@@ -51,7 +50,7 @@ public:
 	UStaticMeshComponent* BPSphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CustomMesh")
-	UStaticMeshComponent* BPCube;
+	UStaticMeshComponent* BPTowerMesh;
 
 	UPROPERTY()
 	TSoftObjectPtr<UTowerNode> RootNodeRef = TSoftObjectPtr<UTowerNode>(FSoftObjectPath("/Game/Philip/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.TestTowerRoot"));
@@ -61,7 +60,6 @@ public:
 
 	AProjectilePool* ProjectilePool = nullptr;
 	ATowerTreeManager* TowerTreeManager = nullptr;
-	ATopDownPawn* TopDownPawn = nullptr;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	float FireRate = 1.0f;
