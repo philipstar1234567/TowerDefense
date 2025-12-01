@@ -9,25 +9,40 @@ void UUpgradeTreeUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
-	//Option1->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption1Clicked);
-	//Option2->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption2Clicked);
-	//Option3->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption3Clicked);
-	//Close->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnCloseClicked);
+	if (Option1)
+	{
+		Option1->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption1Clicked);
+	}
+
+	if (Option2)
+	{
+		Option2->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption2Clicked);
+	}
+	
+	if (Option3)
+	{
+		Option3->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnOption3Clicked);
+	}
+
+	if (Close)
+	{
+		Close->OnClicked.AddDynamic(this, &UUpgradeTreeUI::OnCloseClicked);
+	}
 }
 
 void UUpgradeTreeUI::OnOption1Clicked()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 1 Clicked"));
+	UE_LOG(LogTemp, Log, TEXT("UpgradeTreeUI: OnOption1Clicked"));
 }
 
 void UUpgradeTreeUI::OnOption2Clicked()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 2 Clicked"));
+	UE_LOG(LogTemp, Log, TEXT("UpgradeTreeUI: OnOption2Clicked"));
 }
 
 void UUpgradeTreeUI::OnOption3Clicked()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 3 Clicked"));
+	UE_LOG(LogTemp, Log, TEXT("UpgradeTreeUI: OnOption3Clicked"));
 }
 
 void UUpgradeTreeUI::OnCloseClicked()

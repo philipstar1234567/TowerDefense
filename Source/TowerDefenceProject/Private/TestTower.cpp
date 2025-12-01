@@ -12,6 +12,7 @@
 #include "ProjectilePool.h"
 #include "TowerTreeManager.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -60,10 +61,24 @@ void ATestTower::Test() //REMOVE
  */
 void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed)
 {
+	EGameMode CurrentMode = TopDownPawn->CurrentMode;
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC || !TopDownPawn) return;
+
+	if (!UpgradeTreeUIClass)
+	{
+		UE_LOG(LogTemp, Log, TEXT("TestTower: UpgradeTreeUIClass is nullptr"));
+		return;
+	}
+
 	if (TopDownPawn->CurrentMode == EGameMode::None)
 	{
-		UUpgradeTreeUI* UpgradeTreeUI = CreateWidget<UUpgradeTreeUI>(UGameplayStatics::GetPlayerController(GetWorld(), 0), UUpgradeTreeUI::StaticClass());
+		UE_LOG(LogTemp, Log, TEXT("TestTower: Debug Check"));
+
+		UUpgradeTreeUI* UpgradeTreeUI = CreateWidget<UUpgradeTreeUI>(PC, UpgradeTreeUIClass);
 		UpgradeTreeUI->Tower = this;
+		UpgradeTreeUI->SetIsFocusable(true);
 		UpgradeTreeUI->AddToViewport();
 	}
 }
