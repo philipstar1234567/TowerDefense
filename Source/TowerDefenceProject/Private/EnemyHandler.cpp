@@ -1,24 +1,56 @@
-#include "EnemyHandler.h"
+﻿#include "EnemyHandler.h"
 #include "Kismet/GameplayStatics.h"
 #include "Grid/GridManager.h"
 #include "Grid/BuildManager.h"
 #include "EnemyBase.h"
 #include "Algo/Reverse.h"
 
+/**
+ * @brief Constructor.
+ *
+ * Disables ticking (the handler uses timers instead). Manager lookups
+ * occur via delayed search in BeginPlay().
+ */
 AEnemyHandler::AEnemyHandler()
 {
     PrimaryActorTick.bCanEverTick = false;
 }
 
+/**
+ * @brief Called once the game starts.
+ *
+ * Begins repeated attempts to locate both GridManager and BuildManager.
+ * These searches are deferred because these managers may not exist or
+ * be initialized at level load time.
+ */
 void AEnemyHandler::BeginPlay()
 {
     Super::BeginPlay();
 
-    GetWorldTimerManager().SetTimer(TryFindGridManagerHandle1, this, &AEnemyHandler::TryFindGridManager1, 0.1f, true);
+    // Periodically search for GridManager
+    GetWorldTimerManager().SetTimer(
+        TryFindGridManagerHandle1,
+        this,
+        &AEnemyHandler::TryFindGridManager1,
+        0.1f,
+        true
+    );
 
-    GetWorldTimerManager().SetTimer(TryFindBuildManagerHandle, this, &AEnemyHandler::TryFindBuildManager, 0.1f, true);
+    // Periodically search for BuildManager
+    GetWorldTimerManager().SetTimer(
+        TryFindBuildManagerHandle,
+        this,
+        &AEnemyHandler::TryFindBuildManager,
+        0.1f,
+        true
+    );
 }
 
+/**
+ * @brief Attempts to locate the GridManager in the world.
+ *
+ * When found, registers this EnemyHandler with it and stops the timer.
+ */
 void AEnemyHandler::TryFindGridManager1()
 {
     if (GridManager == nullptr)
@@ -30,7 +62,6 @@ void AEnemyHandler::TryFindGridManager1()
         if (GridManager)
         {
             UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found GridManager after spawn."));
-
             GridManager->EnemyHandler = this;
 
             GetWorldTimerManager().ClearTimer(TryFindGridManagerHandle1);
@@ -38,6 +69,12 @@ void AEnemyHandler::TryFindGridManager1()
     }
 }
 
+/**
+ * @brief Attempts to locate the BuildManager in the world.
+ *
+ * When found, hooks into BuildManager's tower placement/removal events
+ * to force enemies to recalculate their paths.
+ */
 void AEnemyHandler::TryFindBuildManager()
 {
     if (BuildManager == nullptr)
@@ -50,6 +87,7 @@ void AEnemyHandler::TryFindBuildManager()
         {
             UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Found BuildManager after spawn."));
 
+            // React to grid-modifying actions (placing/removing towers)
             BuildManager->OnTowerPlaced.AddDynamic(this, &AEnemyHandler::NotifyGridChanged);
             BuildManager->OnTowerDeleted.AddDynamic(this, &AEnemyHandler::NotifyGridChanged);
 
@@ -58,23 +96,54 @@ void AEnemyHandler::TryFindBuildManager()
     }
 }
 
+/**
+ * @brief Registers an enemy with the handler.
+ *
+ * Prevents duplicates and stores the reference as a TWeakObjectPtr.
+ *
+ * @param Enemy Enemy instance to register.
+ */
 void AEnemyHandler::RegisterEnemy(AEnemyBase* Enemy)
 {
     if (!Enemy) return;
-    for (auto& W : RegisteredEnemies) if (W.IsValid() && W.Get() == Enemy) return;
+
+    for (auto& W : RegisteredEnemies)
+    {
+        if (W.IsValid() && W.Get() == Enemy)
+            return;
+    }
+
     RegisteredEnemies.Add(Enemy);
 }
 
+/**
+ * @brief Unregisters an enemy when destroyed or removed.
+ *
+ * Cleans up invalid weak pointers as well.
+ *
+ * @param Enemy Enemy instance to unregister.
+ */
 void AEnemyHandler::UnregisterEnemy(AEnemyBase* Enemy)
 {
     if (!Enemy) return;
+
     for (int32 i = RegisteredEnemies.Num() - 1; i >= 0; --i)
     {
         if (!RegisteredEnemies[i].IsValid() || RegisteredEnemies[i].Get() == Enemy)
+        {
             RegisteredEnemies.RemoveAt(i);
+        }
     }
 }
 
+/**
+ * @brief Called whenever the grid changes (tower placed/removed).
+ *
+ * Iterates through all registered enemies and instructs them to recalculate paths.
+ *
+ * @param loc Tile coordinate affected by the grid change.
+ * @param cost New movement cost of the tile.
+ */
 void AEnemyHandler::NotifyGridChanged(FVector2D loc, int32 cost)
 {
     for (int32 i = RegisteredEnemies.Num() - 1; i >= 0; --i)
@@ -82,7 +151,10 @@ void AEnemyHandler::NotifyGridChanged(FVector2D loc, int32 cost)
         if (RegisteredEnemies[i].IsValid())
         {
             AEnemyBase* E = RegisteredEnemies[i].Get();
-            if (E) E->RecalculatePath();
+            if (E)
+            {
+                E->RecalculatePath();
+            }
         }
         else
         {
@@ -91,6 +163,13 @@ void AEnemyHandler::NotifyGridChanged(FVector2D loc, int32 cost)
     }
 }
 
+/**
+ * @brief Determines whether a tile is walkable based on its occupancy.
+ *
+ * @param X Grid X coordinate.
+ * @param Y Grid Y coordinate.
+ * @return true if walkable (Empty/Spawn/Goal), false otherwise.
+ */
 bool AEnemyHandler::IsTileWalkable(int32 X, int32 Y) const
 {
     if (!GridManager) return false;
@@ -99,18 +178,24 @@ bool AEnemyHandler::IsTileWalkable(int32 X, int32 Y) const
     FTileData Tile;
     if (!GridManager->GetTileSafe(X, Y, Tile)) return false;
 
-    // Consider spawn & goal tiles walkable as well as empty
     switch (Tile.Occupancy)
     {
     case ETileOccupancyState::Empty:
     case ETileOccupancyState::Spawn:
     case ETileOccupancyState::Goal:
         return true;
+
     default:
         return false;
     }
 }
 
+/**
+ * @brief Returns the four cardinal (N/E/S/W) neighbors of a tile.
+ *
+ * @param P Tile coordinate.
+ * @return Array of neighboring tile coordinates.
+ */
 TArray<FIntPoint> AEnemyHandler::GetNeighbors4(const FIntPoint& P) const
 {
     TArray<FIntPoint> N;
@@ -122,6 +207,17 @@ TArray<FIntPoint> AEnemyHandler::GetNeighbors4(const FIntPoint& P) const
     return N;
 }
 
+/**
+ * @brief Performs A* pathfinding on the tile grid.
+ *
+ * Converts world positions into tile coordinates, performs A*, and
+ * outputs an array of world locations representing the path.
+ *
+ * @param StartWorld Starting world location.
+ * @param EndWorld Target world location.
+ * @param OutPath Filled with the resulting path if successful.
+ * @return true if a valid path to the target exists, false otherwise.
+ */
 bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld, TArray<FVector>& OutPath)
 {
     OutPath.Empty();
@@ -132,30 +228,37 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
         return false;
     }
 
-    // Convert world -> grid coordinates (tile indices)
+    // Convert world → tile coordinates
     FVector2D StartGridF, EndGridF;
     if (!GridManager->WorldToGrid(StartWorld, StartGridF))
     {
-        UE_LOG(LogTemp, Log, TEXT("EnemyHandler::FindPath - start position outside grid: %s"), *StartWorld.ToString());
+        UE_LOG(LogTemp, Log,
+            TEXT("EnemyHandler::FindPath - start position outside grid: %s"),
+            *StartWorld.ToString());
         return false;
     }
+
     if (!GridManager->WorldToGrid(EndWorld, EndGridF))
     {
-        UE_LOG(LogTemp, Log, TEXT("EnemyHandler::FindPath - end position outside grid: %s"), *EndWorld.ToString());
+        UE_LOG(LogTemp, Log,
+            TEXT("EnemyHandler::FindPath - end position outside grid: %s"),
+            *EndWorld.ToString());
         return false;
     }
 
     const FIntPoint StartGrid((int32)StartGridF.X, (int32)StartGridF.Y);
     const FIntPoint GoalGrid((int32)EndGridF.X, (int32)EndGridF.Y);
 
-    // Quick goal walkable check
+    // Early rejection: goal must be walkable
     if (!IsTileWalkable(GoalGrid.X, GoalGrid.Y))
     {
-        UE_LOG(LogTemp, Log, TEXT("EnemyHandler::FindPath - goal tile not walkable (%d,%d)"), GoalGrid.X, GoalGrid.Y);
+        UE_LOG(LogTemp, Log,
+            TEXT("EnemyHandler::FindPath - goal not walkable (%d,%d)"),
+            GoalGrid.X, GoalGrid.Y);
         return false;
     }
 
-    // A* structures
+    // A* data structures
     TArray<FPathNode> Nodes;
     Nodes.Reserve(1024);
     TMap<FIntPoint, int32> NodeIndexMap;
@@ -169,6 +272,7 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
             Node.ParentIndex = ParentIdx;
             Node.G = G;
             Node.H = H;
+
             int32 Idx = Nodes.Add(MoveTemp(Node));
             NodeIndexMap.Add(Coord, Idx);
             return Idx;
@@ -176,21 +280,22 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
 
     auto Heuristic = [&](const FIntPoint& A, const FIntPoint& B) -> float
         {
-            // Manhattan or Euclidean; use Euclidean for now
             return FVector2D::Distance(FVector2D(A.X, A.Y), FVector2D(B.X, B.Y));
         };
 
-    // Start node
+    // Initialize A*
     int32 StartIdx = AddNode(StartGrid, -1, 0.f, Heuristic(StartGrid, GoalGrid));
     OpenList.Add(StartIdx);
     int32 FoundGoalIdx = INDEX_NONE;
 
+    // A* loop
     while (OpenList.Num() > 0)
     {
-        // pick open node with smallest F
+        // Select node with smallest F score
         int32 BestPos = 0;
         int32 BestNodeIdx = OpenList[0];
         float BestF = Nodes[BestNodeIdx].F();
+
         for (int32 i = 1; i < OpenList.Num(); ++i)
         {
             int32 idx = OpenList[i];
@@ -203,25 +308,24 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
             }
         }
 
-        // pop best
         OpenList.RemoveAt(BestPos);
         ClosedSet.Add(Nodes[BestNodeIdx].Coord);
 
-        // check goal
+        // Goal reached
         if (Nodes[BestNodeIdx].Coord == GoalGrid)
         {
             FoundGoalIdx = BestNodeIdx;
             break;
         }
 
-        // neighbors
+        // Expand neighbors
         for (const FIntPoint& NCoord : GetNeighbors4(Nodes[BestNodeIdx].Coord))
         {
             if (!GridManager->IsValidTile(NCoord.X, NCoord.Y)) continue;
             if (!IsTileWalkable(NCoord.X, NCoord.Y)) continue;
             if (ClosedSet.Contains(NCoord)) continue;
 
-            float TentativeG = Nodes[BestNodeIdx].G + 1.0f; // cost between neighbors = 1
+            float TentativeG = Nodes[BestNodeIdx].G + 1.0f;
 
             int32* Existing = NodeIndexMap.Find(NCoord);
             if (Existing)
@@ -232,34 +336,38 @@ bool AEnemyHandler::FindPath(const FVector& StartWorld, const FVector& EndWorld,
                     Nodes[existingIdx].G = TentativeG;
                     Nodes[existingIdx].ParentIndex = BestNodeIdx;
                 }
-                if (!OpenList.Contains(existingIdx)) OpenList.Add(existingIdx);
+
+                if (!OpenList.Contains(existingIdx))
+                    OpenList.Add(existingIdx);
             }
             else
             {
                 float H = Heuristic(NCoord, GoalGrid);
-                int32 newIdx = AddNode(NCoord, BestNodeIdx, TentativeG, H);
-                OpenList.Add(newIdx);
+                int32 NewIdx = AddNode(NCoord, BestNodeIdx, TentativeG, H);
+                OpenList.Add(NewIdx);
             }
         }
     }
 
     if (FoundGoalIdx == INDEX_NONE)
     {
-        // No path found
         return false;
     }
 
-    // Reconstruct path: tile centers from goal to start
+    // Reconstruct world-space path
     TArray<FVector> ReversePath;
     int32 Cursor = FoundGoalIdx;
+
     while (Cursor != -1 && Nodes.IsValidIndex(Cursor))
     {
         const FIntPoint& C = Nodes[Cursor].Coord;
+
         FTileData Tile;
         if (GridManager->GetTileSafe(C.X, C.Y, Tile))
         {
             ReversePath.Add(Tile.WorldLocation);
         }
+
         Cursor = Nodes[Cursor].ParentIndex;
     }
 
