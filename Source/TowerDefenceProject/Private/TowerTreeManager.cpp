@@ -59,25 +59,25 @@ void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 		Tower->Strength *= 2.0f;
 		break;
 	case 4:
-		Tower->FireRate /= 1.2f;
+		Tower->FireRate /= 1.4f;
 		Tower->ResetTimer();
 		break;
 	case 5:
-		Tower->Strength *= 1.2f;
+		Tower->Strength *= 1.4f;
 		break;
 	case 6:
-		Tower->Range *= 1.2f;
+		Tower->Range *= 1.4f;
 		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
 		break;
 	case 7:
-		Tower->Strength *= 1.2f;
+		Tower->Strength *= 1.4f;
 		break;
 	case 8:
-		Tower->Range *= 1.2f;
+		Tower->Range *= 1.4f;
 		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
 		break;
 	case 9:
-		Tower->FireRate /= 1.2f;
+		Tower->FireRate /= 1.4f;
 		Tower->ResetTimer();
 		break;
 	default:

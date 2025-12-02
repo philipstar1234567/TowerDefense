@@ -25,8 +25,9 @@ AEnemyBase::AEnemyBase()
     RootComponent = CollisionComp;
 
     CollisionComp->SetCollisionProfileName(TEXT("Enemy"));
+    CollisionComp->SetMobility(EComponentMobility::Movable);
     CollisionComp->SetGenerateOverlapEvents(true);
-    CollisionComp->InitSphereRadius(100.0f);
+    CollisionComp->InitSphereRadius(50.0f);
 }
 
 /**
@@ -139,21 +140,7 @@ void AEnemyBase::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     MoveAlongPath(DeltaTime);
-
-    /*
-    // Debug: visualize enemy collision radius
-    DrawDebugSphere(
-        GetWorld(),
-        CollisionComp->GetComponentLocation(),
-        CollisionComp->GetScaledSphereRadius(),
-        24,
-        FColor::Red,
-        false,
-        -1.f,
-        0,
-        2.f
-    );
-    */
+    
 }
 
 /**
