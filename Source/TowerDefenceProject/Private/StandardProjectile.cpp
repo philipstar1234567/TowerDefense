@@ -2,27 +2,30 @@
 
 
 #include "StandardProjectile.h"
+
+#include "EnemyBase.h"
 #include "TimerManager.h"
 #include "ProjectilePool.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/PlayerResourceState.h"
 
 // Sets default values
 AStandardProjectile::AStandardProjectile()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
-	CollisionComp->InitSphereRadius(100.0f);
-	CollisionComp->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
-	CollisionComp->OnComponentHit.AddDynamic(this, &AStandardProjectile::OnHit);
+	CollisionComp->InitSphereRadius(Size);
+	CollisionComp->SetCollisionProfileName(TEXT("StandardProjectile"));
 	RootComponent = CollisionComp;
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->SetUpdatedComponent(CollisionComp);
 	ProjectileMovement->InitialSpeed = InitialSpeed;
-	ProjectileMovement->MaxSpeed = 200.0f;
+	ProjectileMovement->MaxSpeed = InitialSpeed;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 	ProjectileMovement->Friction = 0.0f;
@@ -34,22 +37,34 @@ AStandardProjectile::AStandardProjectile()
 	StaticMeshComp->SetStaticMesh(SphereMesh.Object);
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/Philip/Projectiles/M_StandardProjectile.M_StandardProjectile"));
 	StaticMeshComp->SetMaterial(0, Material.Object);
-	StaticMeshComp->AddRelativeLocation(FVector(0, 0, -100.0f));
-	StaticMeshComp->SetWorldScale3D(FVector(2, 2, 2));
+	StaticMeshComp->AddRelativeLocation(FVector(0, 0, -100.0f)); //This works, trust
+	StaticMeshComp->SetWorldScale3D(FVector(2, 2, 2)); //This works, trust
 
-	CollisionComp->SetWorldScale3D(FVector(0.5f, 0.5f, 0.5f));
+	CollisionComp->SetWorldScale3D(FVector(0.25f, 0.25f, 0.25f));
 }
 
-void AStandardProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+void AStandardProjectile::OnHit(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	printf("Projectile Hit\n");
+	if (Cast<AEnemyBase>(FoundActor))
+	{
+		AEnemyBase* FoundEnemy = Cast<AEnemyBase>(FoundActor);
+		FoundEnemy->ApplyDamage(Strength);
+		Disable();
+	}
+	GEngine->AddOnScreenDebugMessage(
+		-1,                     // Key: -1 means add a new message each time
+		5.0f,                   // Time to display in seconds
+		FColor::Red,         // Text color
+		"GUGUGAGA" // Message text
+	);
 }
 
 // Called when the game starts or when spawned
 void AStandardProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AStandardProjectile::OnHit);
+	//GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
 }
 
 void AStandardProjectile::Spawn(ATestTower* SpawnTower)
@@ -79,8 +94,8 @@ void AStandardProjectile::Enable(ATestTower* SpawnTower, FVector MovementDirecti
 	SetActorTickEnabled(true);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
-	//SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());
-	SetActorLocation(SpawnTower->GetActorLocation());
-	ProjectileMovement->Velocity = MovementDirectionIn * InitialSpeed;
+	SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());
+	Strength = SpawnTower->Strength;
+	ProjectileMovement->Velocity = MovementDirectionIn.GetSafeNormal() * ProjectileMovement->InitialSpeed;
 	GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
 }

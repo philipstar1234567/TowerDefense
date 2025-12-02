@@ -18,14 +18,9 @@ AEnemyBase::AEnemyBase()
     CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
     RootComponent = CollisionComp;
     CollisionComp->SetCollisionProfileName(TEXT("Enemy"));
-    //CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    CollisionComp->SetMobility(EComponentMobility::Movable);
     CollisionComp->SetGenerateOverlapEvents(true);
-    //CollisionComp->SetCollisionObjectType(ECC_WorldDynamic);
-    //CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
-    //CollisionComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-    //CollisionComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
     CollisionComp->InitSphereRadius(100.0f);
-    
 }
 
 void AEnemyBase::BeginPlay()
@@ -98,7 +93,7 @@ void AEnemyBase::Tick(float DeltaTime)
 
     MoveAlongPath(DeltaTime);
     
-    /*
+    
     //FROM PHILIP, SHOWS RANGE OF HITBOX, FOR DEBUGGING
     DrawDebugSphere(
                 GetWorld(),
@@ -111,7 +106,7 @@ void AEnemyBase::Tick(float DeltaTime)
                 0,
                 2.f
             );
-    */
+    
 }
 
 void AEnemyBase::MoveAlongPath(float DeltaTime)

@@ -6,12 +6,14 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "TestTower.h"
+#include "EnemyBase.h"
 #include "Components/SphereComponent.h"
 #include "Math/Rotator.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "StandardProjectile.generated.h"
 
 class AProjectilePool;
+class AEnemyBase;
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API AStandardProjectile : public AActor
@@ -28,7 +30,12 @@ class TOWERDEFENCEPROJECT_API AStandardProjectile : public AActor
 	UStaticMeshComponent* StaticMeshComp;
 
 	UPROPERTY(EditAnywhere)
-	float InitialSpeed = 500.0f;
+	float InitialSpeed = 2000.0f;
+	
+	UPROPERTY(EditAnywhere)
+	float Size = 100.0f;
+	
+	float Strength;
 
 	UPROPERTY(EditAnywhere)
 	FRotator MovementDirection = FRotator(1.f, 0.f, 0.f);
@@ -46,7 +53,7 @@ public:
 	float ProjectileLifespan = 5.0f;
 
 	UFUNCTION()
-	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+	void OnHit(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 	void Spawn(ATestTower* SpawnTower);

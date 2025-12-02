@@ -21,23 +21,12 @@ ATestTower::ATestTower()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	//TowerRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TowerRoot"));
-	//TowerRoot->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
-	//TowerRoot->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
-	//RootComponent = TowerRoot;
-	
 	EnemyDetector = CreateDefaultSubobject<USphereComponent>(TEXT("EnemyDetector"));
 	EnemyDetector->InitSphereRadius(Range);
 	RootComponent = EnemyDetector;
-	//EnemyDetector->SetCollisionObjectType(ECC_WorldDynamic);
 	EnemyDetector->SetCollisionProfileName(TEXT("Tower"));
+	EnemyDetector->SetMobility(EComponentMobility::Movable);
 	EnemyDetector->SetGenerateOverlapEvents(true);
-	//EnemyDetector->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	//EnemyDetector->SetCollisionResponseToAllChannels(ECR_Ignore);
-	//EnemyDetector->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
-	//EnemyDetector->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
-	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
 	//Here you have to set the collision profile, and make sure the collision type matches in the enemybase class
 }
 
@@ -99,15 +88,15 @@ void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPress
  */
 void ATestTower::OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(
-			-1,                     // Key: -1 means add a new message each time
-			5.0f,                   // Time to display in seconds
-			FColor::Yellow,         // Text color
-			TEXT("Overlap event generated! Enemy entered") // Message text
-		);
 	if (Cast<AEnemyBase>(FoundActor))
 	{
 		EnemyArray.Add(Cast<AEnemyBase>(FoundActor));
+		GEngine->AddOnScreenDebugMessage(
+			-1,                     // Key: -1 means add a new message each time
+			5.0f,                   // Time to display in seconds
+			FColor::Green,         // Text color
+			FoundActor->GetName() + " In Array" // Message text
+		);
 	}
 }
 
@@ -123,15 +112,15 @@ void ATestTower::OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* Found
  */
 void ATestTower::OnEnemyLost(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex)
 {
-	GEngine->AddOnScreenDebugMessage(
-			-1,                     // Key: -1 means add a new message each time
-			5.0f,                   // Time to display in seconds
-			FColor::Yellow,         // Text color
-			TEXT("Overlap event generated! Enemy Left") // Message text
-		);
 	if (Cast<AEnemyBase>(FoundActor))
 	{
 		EnemyArray.Remove(Cast<AEnemyBase>(FoundActor));
+		GEngine->AddOnScreenDebugMessage(
+			-1,                     // Key: -1 means add a new message each time
+			5.0f,                   // Time to display in seconds
+			FColor::Red,         // Text color
+			FoundActor->GetName() + " Out Of Array" // Message text
+		);
 	}
 }
 
@@ -197,7 +186,9 @@ void ATestTower::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn could not be found!"));
 	}
-
+	
+	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
+	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
 	
 }
 
@@ -205,18 +196,6 @@ void ATestTower::BeginPlay()
 void ATestTower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	DrawDebugSphere(
-				GetWorld(),
-				EnemyDetector->GetComponentLocation(),
-				EnemyDetector->GetScaledSphereRadius(),
-				24,                      // smoothness
-				FColor::Green,
-				false,                   // not persistent, redraw each frame
-				-1.f,                    // duration (-1 = one frame if persistent false)
-				0,
-				2.f                      // line thickness
-			);
-	
 }
 
 /**
@@ -227,7 +206,7 @@ void ATestTower::Fire()
 	if (bIsPlaced == true && EnemyArray.IsEmpty() == false)
 	{
 		FVector EnemyLocation = EnemyArray[0]->CollisionComp->GetComponentLocation();
-		FVector AimDirection = EnemyLocation - this->GetActorLocation();
+		FVector AimDirection = EnemyLocation - BPSphere->GetComponentLocation();
 		
 		if (ProjectilePool->ProjectilePool.IsEmpty())
 		{

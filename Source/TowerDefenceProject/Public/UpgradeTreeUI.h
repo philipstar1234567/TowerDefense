@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Player/PlayerResourceState.h"
 #include "UpgradeTreeUI.generated.h"
 
 class UTowerNode;
 class UTextBlock;
 class UButton;
 class ATestTower;
+class APlayerResourceState;
 
 /**
  * 
@@ -45,6 +47,9 @@ public:
 	
 	UPROPERTY(meta = (BindWidget))
 	UButton* Close;
+	
+	UPROPERTY(VisibleAnywhere)
+	APlayerResourceState* PlayerResourceState;
 	
 	FText Default = FText::FromString(TEXT("X"));
 	

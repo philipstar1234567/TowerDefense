@@ -72,13 +72,13 @@ public:
 	TSubclassOf<UUpgradeTreeUI> UpgradeTreeUIClass;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
-	float FireRate = 1.0f;
+	float FireRate = 0.5f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	float Range = 400.0f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
-	float Strength = 1.0f;
+	float Strength = 25.0f;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	AEnemyBase* CurrentTarget = nullptr;
@@ -94,14 +94,11 @@ public:
 	UFUNCTION()
 	void GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Tower")
 	void OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category = "Tower")
 	void OnEnemyLost(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex);
-	
-	UPROPERTY(EditAnywhere, Category = "UI")
-	TSubclassOf<class UUpgradeTreeUI> UpgradeTreeUIClass;
 
 
 protected:

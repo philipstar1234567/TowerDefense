@@ -8,6 +8,7 @@
 #include "TowerTreeManager.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
 
 void UUpgradeTreeUI::NativeConstruct()
 {
@@ -72,7 +73,10 @@ void UUpgradeTreeUI::NativeConstruct()
 			Option3Text->SetText(UpgradeOptions[2]->DisplayText);
 		}
 	}
-	
+	if (Cast<APlayerResourceState>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerResourceState::StaticClass())))
+	{
+		PlayerResourceState = Cast<APlayerResourceState>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerResourceState::StaticClass()));
+	}
 }
 
 void UUpgradeTreeUI::OnOption1Clicked()
@@ -82,6 +86,10 @@ void UUpgradeTreeUI::OnOption1Clicked()
 		Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[0]);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 1 Clicked"));
 		Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+		if (PlayerResourceState->SpendGold(50))
+		{
+			PlayerResourceState->SpendGold(50);
+		}
 		RemoveFromParent();
 	}
 }
@@ -93,6 +101,10 @@ void UUpgradeTreeUI::OnOption2Clicked()
 		Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[1]);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 2 Clicked"));
 		Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+		if (PlayerResourceState->SpendGold(50))
+		{
+			PlayerResourceState->SpendGold(50);
+		}
 		RemoveFromParent();	
 	}
 }
@@ -104,6 +116,10 @@ void UUpgradeTreeUI::OnOption3Clicked()
 		Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[2]);
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 3 Clicked"));
 		Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+		if (PlayerResourceState->SpendGold(50))
+		{
+			PlayerResourceState->SpendGold(50);
+		}
 		RemoveFromParent();	
 	}
 }
