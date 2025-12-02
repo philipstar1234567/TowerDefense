@@ -92,6 +92,7 @@ void ATopDownPawn::BeginPlay()
 			if (PRS)
 			{
 				BuildManagerRef->SetPlayerResourceState(PRS);
+				PRS->OnGameOver.AddDynamic(this, &ATopDownPawn::HandleDefeat);
 			}
 			else
 			{
@@ -413,4 +414,24 @@ void ATopDownPawn::TogglePause()
 			PC->SetInputMode(InputMode);
 		}
 	}
+}
+
+void ATopDownPawn::HandleDefeat()
+{
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+	if (!EndGameWidgetClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn: No EndGameWidgetClass given!"));
+		return;
+	}
+
+	//Create Widget
+	UEndGameWidget* EndGameWidget = CreateWidget<UEndGameWidget>(PC, EndGameWidgetClass);
+	EndGameWidget->bWinning = false;
+	EndGameWidget->SetIsFocusable(true);
+	EndGameWidget->AddToViewport();
+
+	PC->SetPause(true);
 }

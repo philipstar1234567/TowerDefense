@@ -171,6 +171,12 @@ void AWaveManager::EndWave()
     // Check if there are no more waves left
     if (Waves.Num() > 0 && CurrentWaveIndex >= Waves.Num())
     {
+        // check if lost first
+        if (PlayerResourceState->IsGameOver()) return;
+
+        // Should have added the UI for lost here, however...
+
+        // we won:
         UE_LOG(LogTemp, Log, TEXT("WaveManager: All waves completed!"));
         OnAllWavesCompleted.Broadcast();
 
@@ -182,6 +188,8 @@ void AWaveManager::EndWave()
         EndGameWidget->bWinning = true;
         EndGameWidget->SetIsFocusable(true);
         EndGameWidget->AddToViewport();
+
+        PC->SetPause(true);
     }
 }
 

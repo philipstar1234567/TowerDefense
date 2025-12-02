@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "HUD/EndGameWidget.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "Player/PlayerResourceState.h"
@@ -59,6 +60,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	ABuildManager* BuildManagerRef;
 
+	// EndGameWidget
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UEndGameWidget> EndGameWidgetClass;
+
 	// Public Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ZoomSpeed;
@@ -88,6 +93,9 @@ public:
 
 	UFUNCTION()
 	void TogglePause();
+
+	UFUNCTION()
+	void HandleDefeat();
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Mode")
 	EGameMode CurrentMode = EGameMode::None;
