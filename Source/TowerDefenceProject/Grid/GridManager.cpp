@@ -222,35 +222,48 @@ void AGridManager::UpdateTileVisualInternal(int32 X, int32 Y)
 
 void AGridManager::GenerateCourse()
 {
-	// Collect every Tile on the edge
-	TArray<FVector2D> EdgeTiles;
+	// Collect every Tile on the edges in different arrays
+	TArray<FVector2D> TopEdgeTiles, BotEdgeTiles, RightEdgeTiles, LeftEdgeTiles;
+
 	for (int32 X = 0; X < GridSizeX; X++) // Top + Bott
 	{
-		EdgeTiles.Add(FVector2D(X, 0));
-		EdgeTiles.Add(FVector2D(X, GridSizeY - 1));
+		// Bottom
+		BotEdgeTiles.Add(FVector2D(X, 0));
+
+		// Top
+		TopEdgeTiles.Add(FVector2D(X, GridSizeY - 1));
 	}
 	for (int32 Y = 1; Y < GridSizeY - 1; Y++) // Right + Left
 	{
-		EdgeTiles.Add(FVector2D(0, Y));
-		EdgeTiles.Add(FVector2D(GridSizeX - 1, Y));
+		// Right
+		RightEdgeTiles.Add(FVector2D(0, Y));
+
+		// Left
+		LeftEdgeTiles.Add(FVector2D(GridSizeX - 1, Y));
 	}
 
-	// Pick two different tiles - not adjecent
+	TArray<TArray<FVector2D>*> EdgeArrays;
+	EdgeArrays.Add(&TopEdgeTiles);
+	EdgeArrays.Add(&RightEdgeTiles);
+	EdgeArrays.Add(&BotEdgeTiles);
+	EdgeArrays.Add(&LeftEdgeTiles);
+
 	FVector2D Spawn, Goal;
-	int32 Attempts = 0;
-	const int32 MaxAttempts = 100;
 
-	do
-	{
-		const int32 A = FMath::RandRange(0, EdgeTiles.Num() - 1);
-		const int32 B = FMath::RandRange(0, EdgeTiles.Num() - 1);
+	// pick a random edge
+	int32 RandInt = FMath::RandRange(0, 3);
+	int32 OppositeEdge = RandInt + 2;
+	if (OppositeEdge > 3) { OppositeEdge -= 4; } // 0-3 in the array
 
-		Spawn = EdgeTiles[A];
-		Goal = EdgeTiles[B];
+	// Find the random Spawn
+	TArray<FVector2D>* TheChosenOne = EdgeArrays[RandInt];
+	Spawn = (*TheChosenOne)[FMath::RandRange(0, TheChosenOne->Num() - 1)];
 
-		if (++Attempts > MaxAttempts) break; // safety
-	}
-	while (Spawn == Goal || FVector2D::Distance(Spawn, Goal) <= 1.5f);
+	// Find the random Goal
+	TArray<FVector2D>* TheLostOne = EdgeArrays[OppositeEdge];
+	Goal = (*TheLostOne)[FMath::RandRange(0, TheLostOne->Num() - 1)];
+
+	UE_LOG(LogTemp, Log, TEXT("GridManager: RandInt: %d, OppositeEdge"), (int32)RandInt, (int32)OppositeEdge);
 
 	// Apply
 	SetTileOccupancy(Spawn.X, Spawn.Y, ETileOccupancyState::Spawn);
