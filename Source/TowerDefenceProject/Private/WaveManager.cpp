@@ -191,6 +191,9 @@ void AWaveManager::EndWave()
 
         PC->SetPause(true);
     }
+
+    //Auto Start next wave
+    StartWave(CurrentWaveIndex);
 }
 
 bool AWaveManager::GetWorldSpawnAndGoal(FVector& OutSpawn, FVector& OutGoal) const

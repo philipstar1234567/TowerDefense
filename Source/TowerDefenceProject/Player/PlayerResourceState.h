@@ -32,7 +32,7 @@ public:
 	int32 StartingGold = 1000000;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Properties")
-	int32 StartingHealth = 10;
+	int32 StartingHealth = 1000;
 
 	// --- Functions ---
 	UFUNCTION(BlueprintCallable)
