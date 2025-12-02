@@ -138,6 +138,7 @@ void AWaveManager::SpawnNextEnemy()
         NewEnemy->InitializeEnemy(EnemyHandler, GoalWorld);
         NewEnemy->OnDestroyed.AddDynamic(this, &AWaveManager::OnEnemyDestroyed);
         NewEnemy->OnEnemyFinished.AddDynamic(PlayerResourceState, &APlayerResourceState::HandleEnemyFinished);
+        NewEnemy->OnEnemyKilled.AddDynamic(PlayerResourceState, &APlayerResourceState::AddGold);
         EnemiesSpawnedThisWave++;
         EnemiesAlive++;
     }
@@ -163,9 +164,25 @@ void AWaveManager::OnEnemyDestroyed(AActor* DestroyedActor)
 void AWaveManager::EndWave()
 {
     UE_LOG(LogTemp, Log, TEXT("WaveManager: Wave %d complete."), CurrentWaveIndex);
-    CurrentWaveIndex = -1;
+    CurrentWaveIndex ++;
     EnemiesSpawnedThisWave = 0;
     EnemiesAlive = 0;
+
+    // Check if there are no more waves left
+    if (Waves.Num() > 0 && CurrentWaveIndex >= Waves.Num())
+    {
+        UE_LOG(LogTemp, Log, TEXT("WaveManager: All waves completed!"));
+        OnAllWavesCompleted.Broadcast();
+
+        APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+        if (!PC) return;
+        if (!EndGameWidgetClass) return;
+
+        UEndGameWidget* EndGameWidget = CreateWidget<UEndGameWidget>(PC, EndGameWidgetClass);
+        EndGameWidget->bWinning = true;
+        EndGameWidget->SetIsFocusable(true);
+        EndGameWidget->AddToViewport();
+    }
 }
 
 bool AWaveManager::GetWorldSpawnAndGoal(FVector& OutSpawn, FVector& OutGoal) const

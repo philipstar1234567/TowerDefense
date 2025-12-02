@@ -8,6 +8,7 @@ class AEnemyHandler;
 class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyFinishedDelegate, int32, DamageAmount);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyKilled, int32, GoldReward);
 
 UCLASS()
 class TOWERDEFENCEPROJECT_API AEnemyBase : public AActor
@@ -35,8 +36,25 @@ public:
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnEnemyFinishedDelegate OnEnemyFinished;
 
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnEnemyKilled OnEnemyKilled;
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 GoalDamage = 1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards")
+    int32 GoldReward = 20;
+
+    // Health
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float MaxHealth = 100.f;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+    float Health;
+
+    // Damage function (callable by towers/projectiles)
+    UFUNCTION(BlueprintCallable)
+    void ApplyDamage(float Amount);
 
 protected:
     /** The path returned by EnemyHandler (list of world points) */

@@ -100,6 +100,9 @@ public:
 	UFUNCTION()
 	void OnEnemyLost(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex);
 	
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UUpgradeTreeUI> UpgradeTreeUIClass;
+
 
 protected:
 	// Called when the game starts or when spawned

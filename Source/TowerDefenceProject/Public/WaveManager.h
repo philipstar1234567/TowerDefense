@@ -2,11 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HUD/EndGameWidget.h"
 #include "WaveManager.generated.h"
 
 class AGridManager;
 class AEnemyHandler;
 class AEnemyBase;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllWavesCompletedDelegate);
 
 USTRUCT(BlueprintType)
 struct FEnemyWaveData
@@ -31,6 +34,12 @@ class TOWERDEFENCEPROJECT_API AWaveManager : public AActor
 public:
     AWaveManager();
     virtual void BeginPlay() override;
+    
+    UPROPERTY(EditAnywhere, Category = "UI")
+    TSubclassOf<class UEndGameWidget> EndGameWidgetClass;
+
+    UPROPERTY(BlueprintAssignable, Category = "Events")
+    FOnAllWavesCompletedDelegate OnAllWavesCompleted;
 
     UFUNCTION(BlueprintCallable, Category = "Waves")
     void StartWave(int32 WaveIndex);
@@ -61,7 +70,7 @@ protected:
     FTimerHandle TryFindPlayerResourceStateHandle;
 
 private:
-    int32 CurrentWaveIndex = -1;
+    int32 CurrentWaveIndex = 0;
     int32 EnemiesSpawnedThisWave = 0;
     int32 EnemiesAlive = 0;
 
