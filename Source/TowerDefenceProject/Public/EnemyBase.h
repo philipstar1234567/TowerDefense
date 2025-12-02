@@ -7,80 +7,138 @@
 class AEnemyHandler;
 class USphereComponent;
 
+/**
+ * @brief Delegate fired when an enemy reaches the goal.
+ * @param DamageAmount Amount of damage to apply to the player's goal.
+ */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyFinishedDelegate, int32, DamageAmount);
+
+/**
+ * @brief Delegate fired when an enemy is killed.
+ * @param GoldReward Amount of gold rewarded to the player.
+ */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnemyKilled, int32, GoldReward);
 
+/**
+ * @class AEnemyBase
+ * @brief Base class for all enemy actors in the Tower Defence project.
+ *
+ * Handles navigation along a computed path, collision with towers/projectiles,
+ * taking damage, triggering reward/penalty events, and interacting with
+ * EnemyHandler for path updates.
+ */
 UCLASS()
 class TOWERDEFENCEPROJECT_API AEnemyBase : public AActor
 {
     GENERATED_BODY()
 
 public:
+
+    /** @brief Constructor. Initializes default values. */
     AEnemyBase();
 
+    /** @brief Called every frame. */
     virtual void Tick(float DeltaTime) override;
+
+    /** @brief Called when the game starts or the enemy is spawned. */
     virtual void BeginPlay() override;
+
+    /**
+     * @brief Cleanup when enemy actor ends play.
+     * @param EndPlayReason The reason the actor stopped playing.
+     */
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-    /** Called right after spawn by the WaveManager */
+    /**
+     * @brief Initializes the enemy immediately after spawning.
+     *
+     * Sets the owning EnemyHandler reference and requests the initial path
+     * toward @p InTargetLocation.
+     *
+     * @param InEnemyHandler Pointer to the EnemyHandler that owns this enemy.
+     * @param InTargetLocation The world location to pathfind toward.
+     */
     void InitializeEnemy(AEnemyHandler* InEnemyHandler, const FVector& InTargetLocation);
 
-    /** Called by handler to re-path (e.g., after tower placed) */
+    /**
+     * @brief Forces a path recalculation.
+     *
+     * Called by EnemyHandler when the world navigation changes
+     * (e.g., a tower was placed, blocking a route).
+     */
     UFUNCTION()
     void RecalculatePath();
-    
-    /** Component to check for collisions with TestTower's EnemyDetector and StandardProjectile */
+
+    /** @brief Collision component detecting overlaps with towers/projectiles. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     USphereComponent* CollisionComp;
 
+    /** @brief Broadcast when the enemy reaches the end of the path. */
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnEnemyFinishedDelegate OnEnemyFinished;
 
+    /** @brief Broadcast when the enemy dies and rewards the player. */
     UPROPERTY(BlueprintAssignable, Category = "Events")
     FOnEnemyKilled OnEnemyKilled;
 
+    /** @brief Damage applied to the player goal upon finishing. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int32 GoalDamage = 1;
 
+    /** @brief Gold rewarded to the player on death. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards")
     int32 GoldReward = 20;
 
-    // Health
+    /** @brief Maximum health of this enemy. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
     float MaxHealth = 100.f;
 
+    /** @brief Current remaining health. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
     float Health;
 
-    // Damage function (callable by towers/projectiles)
+    /**
+     * @brief Applies a damage amount to the enemy.
+     *
+     * If health reaches zero, triggers death behavior and reward events.
+     *
+     * @param Amount Amount of hit point damage.
+     */
     UFUNCTION(BlueprintCallable)
     void ApplyDamage(float Amount);
 
 protected:
-    /** The path returned by EnemyHandler (list of world points) */
+
+    /** @brief Cached current path from EnemyHandler. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
     TArray<FVector> CurrentPath;
 
-    /** Path target index we're currently moving toward */
+    /** @brief Index of the waypoint currently being moved toward. */
     int32 CurrentPathIndex;
 
-    /** Movement speed (units per second) */
+    /** @brief Movement speed of the enemy (units per second). */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
     float MoveSpeed;
 
-    /** Distance threshold to "reach" a waypoint */
+    /** @brief Distance considered "close enough" to reach a waypoint. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
     float WaypointAcceptanceRadius;
 
-    /** Cached target world location */
+    /** @brief Cached final target world location. */
     FVector TargetLocation;
 
-    /** Reference to the global EnemyHandler (for pathfinding) */
+    /** @brief Reference to the global EnemyHandler for pathfinding. */
     AEnemyHandler* EnemyHandler;
 
-    /** Requests a new path from EnemyHandler */
+    /**
+     * @brief Requests a fresh navigation path from EnemyHandler.
+     */
     void RequestPath();
 
-    /** Move step toward current waypoint */
+    /**
+     * @brief Moves the enemy along its current path.
+     *
+     * @param DeltaTime Frame delta time.
+     */
     void MoveAlongPath(float DeltaTime);
 };
