@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "UpgradeTreeUI.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "TestTower.generated.h"
 
@@ -13,6 +14,7 @@ class AProjectilePool;
 class UTowerNode;
 class ATowerTreeManager;
 class AEnemyBase;
+class UUpgradeTreeUI;
 class USphereComponent;
 class USceneComponent;
 class UCollisionSphere;
@@ -62,6 +64,12 @@ public:
 	AProjectilePool* ProjectilePool = nullptr;
 	ATowerTreeManager* TowerTreeManager = nullptr;
 	ATopDownPawn* TopDownPawn = nullptr;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	UUpgradeTreeUI* UpgradeTreeUIInstance;
+	
+	UPROPERTY(EditAnywhere, Category = "Tower")
+	TSubclassOf<UUpgradeTreeUI> UpgradeTreeUIClass;
 
 	UPROPERTY(VisibleAnywhere, Category = "Tower")
 	float FireRate = 1.0f;

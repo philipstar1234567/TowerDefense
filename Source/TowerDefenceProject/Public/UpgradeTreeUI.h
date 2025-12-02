@@ -6,6 +6,8 @@
 #include "Blueprint/UserWidget.h"
 #include "UpgradeTreeUI.generated.h"
 
+class UTowerNode;
+class UTextBlock;
 class UButton;
 class ATestTower;
 
@@ -21,18 +23,30 @@ public:
 	virtual void NativeConstruct() override;
 	
 	ATestTower* Tower;
+	TArray<UTowerNode*> UpgradeOptions;
 	
 	UPROPERTY(meta = (BindWidget))
 	UButton* Option1;
 	
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Option1Text;
+	
+	UPROPERTY(meta = (BindWidget))
 	UButton* Option2;
+	
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Option2Text;
 	
 	UPROPERTY(meta = (BindWidget))
 	UButton* Option3;
 	
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Option3Text;
+	
+	UPROPERTY(meta = (BindWidget))
 	UButton* Close;
+	
+	FText Default = FText::FromString(TEXT("X"));
 	
 	UFUNCTION()
 	void OnOption1Clicked();

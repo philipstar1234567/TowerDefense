@@ -2,6 +2,7 @@
 
 #include "TowerTreeManager.h"
 #include "TestTower.h"
+#include "Components/SphereComponent.h"
 
 // Sets default values
 ATowerTreeManager::ATowerTreeManager()
@@ -48,6 +49,7 @@ void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 	{
 	case 1:
 		Tower->Range *= 2.0f;
+		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
 		break;
 	case 2:
 		Tower->FireRate /= 2.0f;
@@ -65,12 +67,14 @@ void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 		break;
 	case 6:
 		Tower->Range *= 1.2f;
+		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
 		break;
 	case 7:
 		Tower->Strength *= 1.2f;
 		break;
 	case 8:
 		Tower->Range *= 1.2f;
+		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
 		break;
 	case 9:
 		Tower->FireRate /= 1.2f;

@@ -19,10 +19,12 @@ public:
 	// Sets default values for this actor's properties
 	ATowerTreeManager();
 
-	UFUNCTION(Exec)
+	UFUNCTION()
 	void GoToNode(ATestTower* Tower, UTowerNode* NextNode);
 
 	void UpgradeTower(ATestTower* Tower);
+	
+	bool bIsInUpgradeMenu = false;
 
 protected:
 	// Called when the game starts or when spawned

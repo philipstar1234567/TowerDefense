@@ -23,4 +23,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "TowerNode")
 	TArray<UTowerNode*> Children;
+	
+	UPROPERTY(EditAnywhere, Category = "TowerNode")
+	FText DisplayText;
 };
