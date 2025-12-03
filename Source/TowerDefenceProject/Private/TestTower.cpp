@@ -19,8 +19,9 @@
 ATestTower::ATestTower()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	
+	// Creates Enemy Detector
 	EnemyDetector = CreateDefaultSubobject<USphereComponent>(TEXT("EnemyDetector"));
 	EnemyDetector->InitSphereRadius(Range);
 	RootComponent = EnemyDetector;
@@ -28,6 +29,7 @@ ATestTower::ATestTower()
 	EnemyDetector->SetMobility(EComponentMobility::Movable);
 	EnemyDetector->SetGenerateOverlapEvents(true);
 	
+	// Creates RangeMesh
 	RangeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RangeMesh"));
 	RangeMesh->SetupAttachment(RootComponent);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Game/Philip/Towers/TestTower/Shape_Sphere.Shape_Sphere"));
@@ -41,24 +43,12 @@ void ATestTower::SetPreviewMode(bool bIsPreview)
 	UE_LOG(LogTemp, Log, TEXT("ATestTower::SetPreviewMode ran succesfully"));
 }
 
-void ATestTower::Test() //REMOVE
-{
-	TowerTreeManager->GoToNode(this, CurrentNode->Children[1]);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Input Worked"));
-}
 
-/**
- * Puts the upgrade UI on screen after clicking on a tower.
- * The UI will reflect the upgrades of the tower and you can choose a new one.
- * 
- * @param ClickedComp The tower clicked on
- * @param ButtonPressed I have no fucking idea
- */
 void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed)
 {
 	if (TowerTreeManager->bIsInUpgradeMenu == false)
 	{
-		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0); // Gets player controller
 		if (!PC) return;
 
 		if (!UpgradeTreeUIClass)
@@ -67,7 +57,7 @@ void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPress
 			return;
 		}
 
-		if (TopDownPawn->CurrentMode == EGameMode::None)
+		if (TopDownPawn->CurrentMode == EGameMode::None) //Doesn't get UI if the player is in build or delete mode
 		{
 			UE_LOG(LogTemp, Log, TEXT("TestTower: Debug Check"));
 
@@ -81,53 +71,19 @@ void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPress
 	}
 }
 
-/**
- * Function called when an enemy comes close enough to a tower to
- * generate an overlap event. Adds the enemy to the tower's 
- * EnemyArray. The array contains all valid targets for the tower.
- * 
- * @param EventGenerator 
- * @param FoundActor 
- * @param FoundComp 
- * @param FoundBodyIndex 
- * @param bFromSweep 
- * @param SweepResult 
- */
 void ATestTower::OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (Cast<AEnemyBase>(FoundActor))
 	{
 		EnemyArray.Add(Cast<AEnemyBase>(FoundActor));
-		GEngine->AddOnScreenDebugMessage(
-			-1,                     // Key: -1 means add a new message each time
-			5.0f,                   // Time to display in seconds
-			FColor::Green,         // Text color
-			FoundActor->GetName() + " In Array" // Message text
-		);
 	}
 }
 
-/**
- * Function called when an enemy inside a tower's range
- * leaves it. Enemy gets removed from the tower's EnemyArray
- * so the tower can't shoot at it anymore.
- * 
- * @param EventGenerator 
- * @param FoundActor 
- * @param FoundComp 
- * @param FoundBodyIndex 
- */
 void ATestTower::OnEnemyLost(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex)
 {
 	if (Cast<AEnemyBase>(FoundActor))
 	{
 		EnemyArray.Remove(Cast<AEnemyBase>(FoundActor));
-		GEngine->AddOnScreenDebugMessage(
-			-1,                     // Key: -1 means add a new message each time
-			5.0f,                   // Time to display in seconds
-			FColor::Red,         // Text color
-			FoundActor->GetName() + " Out Of Array" // Message text
-		);
 	}
 }
 
@@ -136,10 +92,11 @@ void ATestTower::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Gets cube part of tower from blueprint and sets up click event
 	if (BPCube)
 	{
 		BPCube->SetupAttachment(RootComponent);
-		BPCube->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //CHANGE FOR UI
+		BPCube->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		BPCube->SetGenerateOverlapEvents(true);
 		BPCube->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 		BPCube->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
@@ -149,10 +106,11 @@ void ATestTower::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("BPCube hasn't loaded yet"));
 	}
 	
+	// Gets cube part of tower from blueprint and sets up click event
 	if (BPSphere)
 	{
 		BPSphere->SetupAttachment(RootComponent);
-		BPSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); //CHANGE FOR UI
+		BPSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		BPSphere->SetGenerateOverlapEvents(true);
 		BPSphere->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 		BPSphere->OnClicked.AddDynamic(this, &ATestTower::GetUpgradeUI);
@@ -162,7 +120,9 @@ void ATestTower::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("BPSphere hasn't loaded yet"));
 	}
 	
-	ResetTimer();
+	ResetTimer(); //Sets up firerate timer
+	
+	// Get reference to AProjectilePool, create one if it doesn't exist
 	if (Cast<AProjectilePool>(UGameplayStatics::GetActorOfClass(GetWorld(), AProjectilePool::StaticClass())))
 	{
 		ProjectilePool = Cast<AProjectilePool>(UGameplayStatics::GetActorOfClass(GetWorld(), AProjectilePool::StaticClass()));
@@ -175,6 +135,7 @@ void ATestTower::BeginPlay()
 	
 	CurrentNode = RootNodeRef.LoadSynchronous();
 	
+	// Get reference to ATowerTreeManager, create one if it doesn't exist
 	if (Cast<ATowerTreeManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ATowerTreeManager::StaticClass())))
 	{
 		TowerTreeManager = Cast<ATowerTreeManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ATowerTreeManager::StaticClass()));
@@ -185,6 +146,7 @@ void ATestTower::BeginPlay()
 		UE_LOG(LogTemp, Log, TEXT("TowerTreeManager created"));
 	}
 	
+	// Get reference to ATopDownPawn, game won't start without this so we assume it exists
 	if (Cast<ATopDownPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ATopDownPawn::StaticClass())))
 	{
 		TopDownPawn = Cast<ATopDownPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), ATopDownPawn::StaticClass()));
@@ -194,6 +156,7 @@ void ATestTower::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("TopDownPawn could not be found!"));
 	}
 	
+	//Last few lines here are things that the constructor wasn't able to do as the components weren't loaded.
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
 	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
 	FixRangeMeshSize();
@@ -206,30 +169,16 @@ void ATestTower::BeginPlay()
 void ATestTower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	DrawDebugSphere(
-			GetWorld(),
-			EnemyDetector->GetComponentLocation(), // Sphere center
-			Range,                               // Radius matching Range
-			32,                                  // Sphere segments for smoothness
-			FColor::Green,                       // Sphere color
-			false,                              // Persistent (false = duration only)
-			-1.f,                               // Duration (-1 = single frame)
-			0,                                  // Depth priority
-			2.0f                               // Thickness of the wireframe
-		);
 }
 
-/**
- * 
- */
 void ATestTower::Fire()
 {
-	if (bIsPlaced == true && EnemyArray.IsEmpty() == false)
+	if (bIsPlaced == true && EnemyArray.IsEmpty() == false) //Checks if the tower is placed and the tower has an enemy in range
 	{
 		FVector EnemyLocation = EnemyArray[0]->CollisionComp->GetComponentLocation();
-		FVector AimDirection = EnemyLocation - BPSphere->GetComponentLocation();
+		FVector AimDirection = EnemyLocation - BPSphere->GetComponentLocation(); // Gets direction to aim in
 		
-		if (ProjectilePool->ProjectilePool.IsEmpty())
+		if (ProjectilePool->ProjectilePool.IsEmpty()) // If the pool is empty, spawn a completely new projectile, otherwise pop one from the pool
 		{
 			AStandardProjectile* NewProjectile = GetWorld()->SpawnActor<AStandardProjectile>(GetActorLocation(), GetActorRotation());
 			NewProjectile->ProjectilePool = ProjectilePool;
@@ -251,5 +200,5 @@ void ATestTower::ResetTimer()
 void ATestTower::FixRangeMeshSize()
 {
 	RangeMesh->SetWorldScale3D(FVector(Range/50));
-	RangeMesh->SetRelativeLocation(FVector(0, 0, -Range));
+	RangeMesh->SetRelativeLocation(FVector(0, 0, -Range)); //Calculations are done based on range so it will scale correctly
 }

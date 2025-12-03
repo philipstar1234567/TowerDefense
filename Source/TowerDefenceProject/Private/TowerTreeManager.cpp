@@ -8,7 +8,7 @@
 ATowerTreeManager::ATowerTreeManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 }
 
@@ -42,7 +42,8 @@ void ATowerTreeManager::GoToNode(ATestTower* Tower, UTowerNode* NextNode)
 }
 
 
-//Important: When updating FireRate, always call Tower->ResetTimer() or it will not have any effect. And remember to divide for FireRate, not multiply (see code for example)
+// Important: When updating FireRate, always call Tower->ResetTimer() or it will not have any effect. And remember to divide for FireRate, not multiply (see code for example)
+// When updating Range, also use Tower->EnemyDetector->SetSphereRadius(Tower->Range); and Tower->FixRangeMeshSize(); to fix the collision and mesh respectively
 void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 {
 	switch (Tower->CurrentNode->ID)

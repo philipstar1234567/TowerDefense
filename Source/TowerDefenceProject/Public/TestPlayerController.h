@@ -7,7 +7,7 @@
 #include "TestPlayerController.generated.h"
 
 /**
- * 
+ * @brief WAS USED FOR DEBUGGING, DON'T BOTHER LOOKING HERE
  */
 UCLASS()
 class TOWERDEFENCEPROJECT_API ATestPlayerController : public APlayerController

@@ -81,7 +81,7 @@ void UUpgradeTreeUI::NativeConstruct()
 
 void UUpgradeTreeUI::OnOption1Clicked()
 {
-	if (Option1Text->Text.EqualTo(Default) == false)
+	if (Option1Text->Text.EqualTo(Default) == false) //If the text was never changed from default, then there is no option available and the button can't be clicked
 	{
 		if (PlayerResourceState->SpendGold(50))
 		{
@@ -96,7 +96,7 @@ void UUpgradeTreeUI::OnOption1Clicked()
 
 void UUpgradeTreeUI::OnOption2Clicked()
 {
-	if (Option2Text->Text.EqualTo(Default) == false)
+	if (Option2Text->Text.EqualTo(Default) == false) //If the text was never changed from default, then there is no option available and the button can't be clicked
 	{
 		if (PlayerResourceState->SpendGold(50))
 		{
@@ -111,7 +111,7 @@ void UUpgradeTreeUI::OnOption2Clicked()
 
 void UUpgradeTreeUI::OnOption3Clicked()
 {
-	if (Option3Text->Text.EqualTo(Default) == false)
+	if (Option3Text->Text.EqualTo(Default) == false) //If the text was never changed from default, then there is no option available and the button can't be clicked
 	{
 		if (PlayerResourceState->SpendGold(50))
 		{

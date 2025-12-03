@@ -8,6 +8,12 @@
 
 class AStandardProjectile;
 
+/**
+ * @brief A class that stores all spawned projectiles for later reuse.
+ * 
+ * The class has an array of AStandardProjectiles, that gets pushed and popped in ATestTower.
+ * None of the logic exists in this class, it only exists to hold an array.
+ */
 UCLASS()
 class TOWERDEFENCEPROJECT_API AProjectilePool : public AActor
 {
@@ -16,7 +22,7 @@ class TOWERDEFENCEPROJECT_API AProjectilePool : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AProjectilePool();
-
+	
 	UPROPERTY()
 	TArray<AStandardProjectile*> ProjectilePool;
 

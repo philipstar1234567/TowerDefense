@@ -15,13 +15,15 @@
 AStandardProjectile::AStandardProjectile()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	//Creates the collision component
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	CollisionComp->InitSphereRadius(Size);
 	CollisionComp->SetCollisionProfileName(TEXT("StandardProjectile"));
 	RootComponent = CollisionComp;
 
+	// Creates the component responsible for movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->SetUpdatedComponent(CollisionComp);
 	ProjectileMovement->InitialSpeed = InitialSpeed;
@@ -31,14 +33,15 @@ AStandardProjectile::AStandardProjectile()
 	ProjectileMovement->Friction = 0.0f;
 	ProjectileMovement->ProjectileGravityScale = 0.0f;
 
+	// Gets the mesh and material from the Projectiles folder
 	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
 	StaticMeshComp->SetupAttachment(CollisionComp);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Game/Philip/Projectiles/Shape_Sphere.Shape_Sphere"));
 	StaticMeshComp->SetStaticMesh(SphereMesh.Object);
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/Philip/Projectiles/M_StandardProjectile.M_StandardProjectile"));
 	StaticMeshComp->SetMaterial(0, Material.Object);
-	StaticMeshComp->AddRelativeLocation(FVector(0, 0, -100.0f)); //This works, trust
-	StaticMeshComp->SetWorldScale3D(FVector(2, 2, 2)); //This works, trust
+	StaticMeshComp->AddRelativeLocation(FVector(0, 0, -100.0f)); //This line and the following line compensate for size differences between the mesh and the collision component
+	StaticMeshComp->SetWorldScale3D(FVector(2, 2, 2));
 
 	CollisionComp->SetWorldScale3D(FVector(0.25f, 0.25f, 0.25f));
 }
@@ -49,27 +52,15 @@ void AStandardProjectile::OnHit(UPrimitiveComponent* EventGenerator, AActor* Fou
 	{
 		AEnemyBase* FoundEnemy = Cast<AEnemyBase>(FoundActor);
 		FoundEnemy->ApplyDamage(Strength);
-		Disable();
+		Disable(); // Remove projectile after hit
 	}
-	GEngine->AddOnScreenDebugMessage(
-		-1,                     // Key: -1 means add a new message each time
-		5.0f,                   // Time to display in seconds
-		FColor::Red,         // Text color
-		"GUGUGAGA" // Message text
-	);
 }
 
 // Called when the game starts or when spawned
 void AStandardProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AStandardProjectile::OnHit);
-	//GetWorldTimerManager().SetTimer(ProjectileLifespanHandle, this, &AStandardProjectile::Disable, ProjectileLifespan, false);
-}
-
-void AStandardProjectile::Spawn(ATestTower* SpawnTower)
-{
-	printf("Spawned\n");
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AStandardProjectile::OnHit); //This line didn't work in constructor as not everything had loaded yet, so it is here
 }
 
 // Called every frame
@@ -80,7 +71,6 @@ void AStandardProjectile::Tick(float DeltaTime)
 
 void AStandardProjectile::Disable()
 {
-	SetActorTickEnabled(false);
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	SetActorLocation(ProjectilePool->GetActorLocation());
@@ -91,7 +81,6 @@ void AStandardProjectile::Disable()
 
 void AStandardProjectile::Enable(ATestTower* SpawnTower, FVector MovementDirectionIn)
 {
-	SetActorTickEnabled(true);
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	SetActorLocation(SpawnTower->BPSphere->GetComponentLocation());

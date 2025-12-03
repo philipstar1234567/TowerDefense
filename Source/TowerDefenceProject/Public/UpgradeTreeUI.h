@@ -14,7 +14,10 @@ class ATestTower;
 class APlayerResourceState;
 
 /**
+ * @brief Class for the UI that shows up when a tower is clicked on
  * 
+ * Relies on the WBP_UpgradeTreeUI class for widgets and such. Cannot
+ * currently support more than three upgrade options.
  */
 UCLASS()
 class TOWERDEFENCEPROJECT_API UUpgradeTreeUI : public UUserWidget
@@ -24,8 +27,13 @@ class TOWERDEFENCEPROJECT_API UUpgradeTreeUI : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 	
+	// Tower selected
 	ATestTower* Tower;
+	
+	// Child nodes of the node that tower is currently on
 	TArray<UTowerNode*> UpgradeOptions;
+	
+	//Option 1, 2 and 3 are the actual buttons while Option1Text, 2Text and 3Text is what is displayed on top of the button
 	
 	UPROPERTY(meta = (BindWidget))
 	UButton* Option1;
@@ -48,20 +56,26 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UButton* Close;
 	
+	// Reference to class that holds the player's gold, to check if you have enough gold for the upgrade
 	UPROPERTY(VisibleAnywhere)
 	APlayerResourceState* PlayerResourceState;
 	
+	// Default text to be displayed if there is no available option for a slot
 	FText Default = FText::FromString(TEXT("X"));
 	
 	UFUNCTION()
+	//Checks if the player has enough gold, if so tells ATowerTreeManager to upgrade and closes
 	void OnOption1Clicked();
 	
+	//Checks if the player has enough gold, if so tells ATowerTreeManager to upgrade and closes
 	UFUNCTION()
 	void OnOption2Clicked();
 	
+	//Checks if the player has enough gold, if so tells ATowerTreeManager to upgrade and closes
 	UFUNCTION()
 	void OnOption3Clicked();
 	
+	//Closes the goddamn menu (who would've thought)
 	UFUNCTION()
 	void OnCloseClicked();
 };
