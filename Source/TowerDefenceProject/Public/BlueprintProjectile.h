@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "BlueprintProjectile.generated.h"
 
+/**
+ * @brief NOT IN USE, DON'T BOTHER
+ */
 UCLASS()
 class TOWERDEFENCEPROJECT_API ABlueprintProjectile : public AActor
 {
