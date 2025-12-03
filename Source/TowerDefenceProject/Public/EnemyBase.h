@@ -87,7 +87,7 @@ public:
 
     /** @brief Gold rewarded to the player on death. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rewards")
-    int32 GoldReward = 15;
+    int32 GoldReward = 5;
 
     /** @brief Maximum health of this enemy. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
