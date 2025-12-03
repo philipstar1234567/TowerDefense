@@ -21,7 +21,7 @@ void UUpgradeTreeUI::NewConstruct(ATestTower* InTower)
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("UpgradeTreeUI: Tower or CurrentNode is null!"));
-		return; // or handle gracefully
+		return;
 	}
 
 	if (Option1)

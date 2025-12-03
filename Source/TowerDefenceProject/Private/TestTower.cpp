@@ -75,9 +75,8 @@ void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPress
 				UpgradeTreeUIInstance->NewConstruct(this);
 				UpgradeTreeUIInstance->SetIsFocusable(true);
 				UpgradeTreeUIInstance->AddToViewport();
+				TowerTreeManager->bIsInUpgradeMenu = true;
 			}
-
-			TowerTreeManager->bIsInUpgradeMenu = true;
 
 			if (RangeMesh)
 			{

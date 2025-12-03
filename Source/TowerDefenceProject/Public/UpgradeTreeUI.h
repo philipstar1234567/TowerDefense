@@ -25,9 +25,21 @@ class TOWERDEFENCEPROJECT_API UUpgradeTreeUI : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+	/**
+	 * @brief Custom constructor to be called when creating widget
+	 * 
+	 * Exists instead of the usual NativeConstruct as we
+	 * ran into a lot of issues with the normal constructor.
+	 * Problem was the constructor needed a tower to be made but
+	 * you couldn't give the class a tower to use in the constructor
+	 * before the constructor was done. This one just takes it as
+	 * a parameter. Must always be called when instantiating.
+	 * 
+	 * @param InTower The tower to be upgraded in the UI
+	 */
 	void NewConstruct(ATestTower* InTower);
 	
-	// Tower selected
+	// Tower to be upgraded in the UI
 	ATestTower* Tower;
 	
 	// Child nodes of the node that tower is currently on
