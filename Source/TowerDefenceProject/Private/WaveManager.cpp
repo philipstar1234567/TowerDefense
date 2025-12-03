@@ -110,7 +110,7 @@ void AWaveManager::StartWave(int32 WaveIndex)
     CurrentWaveIndex = WaveIndex;
     EnemiesSpawnedThisWave = 0;
     EnemiesAlive = 0;
-
+    
     const float Interval = FMath::Max(0.05f, Waves[WaveIndex].SpawnInterval);
     GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &AWaveManager::SpawnNextEnemy, Interval, true);
 
@@ -162,6 +162,12 @@ void AWaveManager::SpawnNextEnemy()
 
     if (NewEnemy)
     {
+        float EnemyHealthScaling;
+        if (CurrentWaveIndex > 0)
+        {
+            EnemyHealthScaling = 150.f * CurrentWaveIndex;
+        }
+        NewEnemy->MaxHealth += EnemyHealthScaling;
         NewEnemy->InitializeEnemy(EnemyHandler, GoalWorld);
         NewEnemy->OnDestroyed.AddDynamic(this, &AWaveManager::OnEnemyDestroyed);
         NewEnemy->OnEnemyFinished.AddDynamic(PlayerResourceState, &APlayerResourceState::HandleEnemyFinished);

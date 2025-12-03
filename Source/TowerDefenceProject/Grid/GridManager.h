@@ -101,6 +101,7 @@ public:
 	bool SetTileOccupancy(int32 X, int32 Y, ETileOccupancyState NewOccupancy, AActor* NewOccupant = nullptr);
 
 	/* Debug console commands */
+	// cannot use, does not work on an AActor...
 	UFUNCTION(Exec) void DebugPrintGrid() const;
 	UFUNCTION(Exec) void DebugSetVisual(int32 X, int32 Y, int32 State);
 
@@ -134,10 +135,6 @@ private:
 	int32 GetTileIndex(int32 X, int32 Y) const;
 	//ETileVisualState GetVisualStateForOccupancy(ETileOccupancyState Occupancy) const;
 
-	
-
 	UPROPERTY()
 	TMap<int32, UStaticMeshComponent*> TileMeshes; // Index -> mesh
-
-	
 };

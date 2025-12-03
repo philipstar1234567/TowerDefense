@@ -1,4 +1,9 @@
 
+
+
+
+/* THIS IS NOT INCLUDED IN THE GAME */
+/* DONT YOU DARE LOOK AT THIS */
 #include "Grid/Tower.h"
 
 ATower::ATower()
