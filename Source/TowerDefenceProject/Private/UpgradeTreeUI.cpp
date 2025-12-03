@@ -83,14 +83,13 @@ void UUpgradeTreeUI::OnOption1Clicked()
 {
 	if (Option1Text->Text.EqualTo(Default) == false)
 	{
-		Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[0]);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 1 Clicked"));
-		Tower->TowerTreeManager->bIsInUpgradeMenu = false;
 		if (PlayerResourceState->SpendGold(50))
 		{
-			PlayerResourceState->SpendGold(50);
+			Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[0]);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 1 Clicked"));
+			Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+			RemoveFromParent();
 		}
-		RemoveFromParent();
 	}
 }
 
@@ -98,14 +97,13 @@ void UUpgradeTreeUI::OnOption2Clicked()
 {
 	if (Option2Text->Text.EqualTo(Default) == false)
 	{
-		Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[1]);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 2 Clicked"));
-		Tower->TowerTreeManager->bIsInUpgradeMenu = false;
 		if (PlayerResourceState->SpendGold(50))
 		{
-			PlayerResourceState->SpendGold(50);
+			Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[1]);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 2 Clicked"));
+			Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+			RemoveFromParent();
 		}
-		RemoveFromParent();	
 	}
 }
 
@@ -113,14 +111,13 @@ void UUpgradeTreeUI::OnOption3Clicked()
 {
 	if (Option3Text->Text.EqualTo(Default) == false)
 	{
-		Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[2]);
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 3 Clicked"));
-		Tower->TowerTreeManager->bIsInUpgradeMenu = false;
 		if (PlayerResourceState->SpendGold(50))
 		{
-			PlayerResourceState->SpendGold(50);
+			Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[2]);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 3 Clicked"));
+			Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+			RemoveFromParent();
 		}
-		RemoveFromParent();	
 	}
 }
 
