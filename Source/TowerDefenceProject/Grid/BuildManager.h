@@ -5,7 +5,6 @@
 #include "Grid/GridManager.h"
 #include "Player/PlayerResourceState.h"
 #include "TowerData.h"
-#include "Tower.h"
 #include "TestTower.h"
 #include "BuildManager.generated.h"
 
