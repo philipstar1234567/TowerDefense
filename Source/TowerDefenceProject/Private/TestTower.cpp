@@ -197,7 +197,8 @@ void ATestTower::BeginPlay()
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
 	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
 	FixRangeMeshSize();
-	RangeMesh->SetVisibility(false);
+	RangeMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	RangeMesh->SetVisibility(true);
 	
 }
 

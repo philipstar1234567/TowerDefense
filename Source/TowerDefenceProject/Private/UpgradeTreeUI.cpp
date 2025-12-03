@@ -88,6 +88,7 @@ void UUpgradeTreeUI::OnOption1Clicked()
 			Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[0]);
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 1 Clicked"));
 			Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+			Tower->RangeMesh->SetVisibility(false);
 			RemoveFromParent();
 		}
 	}
@@ -102,6 +103,7 @@ void UUpgradeTreeUI::OnOption2Clicked()
 			Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[1]);
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 2 Clicked"));
 			Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+			Tower->RangeMesh->SetVisibility(false);
 			RemoveFromParent();
 		}
 	}
@@ -116,6 +118,7 @@ void UUpgradeTreeUI::OnOption3Clicked()
 			Tower->TowerTreeManager->GoToNode(Tower, UpgradeOptions[2]);
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Option 3 Clicked"));
 			Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+			Tower->RangeMesh->SetVisibility(false);
 			RemoveFromParent();
 		}
 	}
@@ -124,6 +127,7 @@ void UUpgradeTreeUI::OnOption3Clicked()
 void UUpgradeTreeUI::OnCloseClicked()
 {
 	Tower->TowerTreeManager->bIsInUpgradeMenu = false;
+	Tower->RangeMesh->SetVisibility(false);
 	RemoveFromParent();	
 }
 

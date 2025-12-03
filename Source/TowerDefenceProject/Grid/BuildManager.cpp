@@ -201,6 +201,7 @@ bool ABuildManager::PerformPlacement(const FTileData& Tile)
 	SpawnedTower->SetPreviewMode(false);
 	SpawnedTower->SetActorEnableCollision(true);
 	SpawnedTower->bIsPlaced = true;
+	SpawnedTower->RangeMesh->SetVisibility(false);
 
 	FTowerData NewTower{ LastHoveredTile, SpawnedTower, SelectedTowerCost };
 	PlacedTowers.Add(NewTower);
