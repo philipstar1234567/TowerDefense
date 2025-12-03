@@ -170,7 +170,10 @@ void ATopDownPawn::Tick(float DeltaTime)
 	}
 }
 
-// i should really have done this in the Player Controller...
+/// <summary>
+/// 
+/// </summary>
+/// <param name="PlayerInputComponent"></param>
 void ATopDownPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
