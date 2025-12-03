@@ -10,11 +10,19 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 
-void UUpgradeTreeUI::NativeConstruct()
+void UUpgradeTreeUI::NewConstruct(ATestTower* InTower)
 {
-	Super::NativeConstruct();
-	
-	UpgradeOptions = Tower->CurrentNode->Children;
+	Tower = InTower;
+
+	if (Tower && Tower->CurrentNode)
+	{
+		UpgradeOptions = Tower->CurrentNode->Children;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UpgradeTreeUI: Tower or CurrentNode is null!"));
+		return; // or handle gracefully
+	}
 
 	if (Option1)
 	{

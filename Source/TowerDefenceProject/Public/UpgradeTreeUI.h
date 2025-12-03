@@ -25,7 +25,7 @@ class TOWERDEFENCEPROJECT_API UUpgradeTreeUI : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	virtual void NativeConstruct() override;
+	void NewConstruct(ATestTower* InTower);
 	
 	// Tower selected
 	ATestTower* Tower;

@@ -58,10 +58,10 @@ public:
 	void FixRangeMeshSize();
 
 	// Tower's root node, gets set in BeginPlay so it's loaded
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Tower")
 	TSoftObjectPtr<UTowerNode> RootNodeRef = TSoftObjectPtr<UTowerNode>(FSoftObjectPath("/Game/Philip/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.TestTowerRoot"));
 
-	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	UPROPERTY(EditAnywhere, Category = "Tower")
 	UTowerNode* CurrentNode = nullptr;
 
 	// References to other classes, set in BeginPlay so everything is loaded

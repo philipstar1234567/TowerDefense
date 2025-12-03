@@ -46,30 +46,47 @@ void ATestTower::SetPreviewMode(bool bIsPreview)
 
 void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPressed)
 {
-	if (TowerTreeManager->bIsInUpgradeMenu == false)
+	if (!TowerTreeManager) return;
+
+	if (!TowerTreeManager->bIsInUpgradeMenu)
 	{
-		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0); // Gets player controller
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 		if (!PC) return;
 
 		if (!UpgradeTreeUIClass)
 		{
-			UE_LOG(LogTemp, Log, TEXT("TestTower: UpgradeTreeUIClass is nullptr"));
+			UE_LOG(LogTemp, Warning, TEXT("TestTower: UpgradeTreeUIClass is nullptr"));
 			return;
 		}
 
-		if (TopDownPawn->CurrentMode == EGameMode::None) //Doesn't get UI if the player is in build or delete mode
+		if (!TopDownPawn)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("TestTower: TopDownPawn is nullptr"));
+			return;
+		}
+
+		if (TopDownPawn->CurrentMode == EGameMode::None)
 		{
 			UE_LOG(LogTemp, Log, TEXT("TestTower: Debug Check"));
 
 			UpgradeTreeUIInstance = CreateWidget<UUpgradeTreeUI>(PC, UpgradeTreeUIClass);
-			UpgradeTreeUIInstance->Tower = this;
-			UpgradeTreeUIInstance->SetIsFocusable(true);
-			UpgradeTreeUIInstance->AddToViewport();
+			if (UpgradeTreeUIInstance)
+			{
+				UpgradeTreeUIInstance->NewConstruct(this);
+				UpgradeTreeUIInstance->SetIsFocusable(true);
+				UpgradeTreeUIInstance->AddToViewport();
+			}
+
 			TowerTreeManager->bIsInUpgradeMenu = true;
-			RangeMesh->SetVisibility(true);
+
+			if (RangeMesh)
+			{
+				RangeMesh->SetVisibility(true);
+			}
 		}
 	}
 }
+
 
 void ATestTower::OnEnemyFound(UPrimitiveComponent* EventGenerator, AActor* FoundActor, UPrimitiveComponent* FoundComp, int32 FoundBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
