@@ -27,7 +27,13 @@ ATestTower::ATestTower()
 	EnemyDetector->SetCollisionProfileName(TEXT("Tower"));
 	EnemyDetector->SetMobility(EComponentMobility::Movable);
 	EnemyDetector->SetGenerateOverlapEvents(true);
-	//Here you have to set the collision profile, and make sure the collision type matches in the enemybase class
+	
+	RangeMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RangeMesh"));
+	RangeMesh->SetupAttachment(RootComponent);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Game/Philip/Towers/TestTower/Shape_Sphere.Shape_Sphere"));
+	RangeMesh->SetStaticMesh(SphereMesh.Object);
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/Philip/Towers/TestTower/M_Range.M_Range"));
+	RangeMesh->SetMaterial(0, Material.Object);
 }
 
 void ATestTower::SetPreviewMode(bool bIsPreview)
@@ -70,6 +76,7 @@ void ATestTower::GetUpgradeUI(UPrimitiveComponent* ClickedComp, FKey ButtonPress
 			UpgradeTreeUIInstance->SetIsFocusable(true);
 			UpgradeTreeUIInstance->AddToViewport();
 			TowerTreeManager->bIsInUpgradeMenu = true;
+			RangeMesh->SetVisibility(true);
 		}
 	}
 }
@@ -189,6 +196,8 @@ void ATestTower::BeginPlay()
 	
 	EnemyDetector->OnComponentBeginOverlap.AddDynamic(this, &ATestTower::OnEnemyFound);
 	EnemyDetector->OnComponentEndOverlap.AddDynamic(this, &ATestTower::OnEnemyLost);
+	FixRangeMeshSize();
+	RangeMesh->SetVisibility(false);
 	
 }
 
@@ -196,6 +205,17 @@ void ATestTower::BeginPlay()
 void ATestTower::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	DrawDebugSphere(
+			GetWorld(),
+			EnemyDetector->GetComponentLocation(), // Sphere center
+			Range,                               // Radius matching Range
+			32,                                  // Sphere segments for smoothness
+			FColor::Green,                       // Sphere color
+			false,                              // Persistent (false = duration only)
+			-1.f,                               // Duration (-1 = single frame)
+			0,                                  // Depth priority
+			2.0f                               // Thickness of the wireframe
+		);
 }
 
 /**
@@ -225,4 +245,10 @@ void ATestTower::Fire()
 void ATestTower::ResetTimer()
 {
 	GetWorldTimerManager().SetTimer(FireRateHandle, this, &ATestTower::Fire, FireRate, true);
+}
+
+void ATestTower::FixRangeMeshSize()
+{
+	RangeMesh->SetWorldScale3D(FVector(Range/50));
+	RangeMesh->SetRelativeLocation(FVector(0, 0, -Range));
 }

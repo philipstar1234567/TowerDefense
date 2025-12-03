@@ -54,6 +54,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="CustomMesh")
 	UStaticMeshComponent* BPCube;
+	
+	UPROPERTY(EditAnywhere, Category="CustomMesh")
+	UStaticMeshComponent* RangeMesh;
+	
+	void FixRangeMeshSize();
 
 	UPROPERTY()
 	TSoftObjectPtr<UTowerNode> RootNodeRef = TSoftObjectPtr<UTowerNode>(FSoftObjectPath("/Game/Philip/Towers/TestTower/TestTower_UpgradeTree/TestTowerRoot.TestTowerRoot"));
@@ -71,13 +76,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Tower")
 	TSubclassOf<UUpgradeTreeUI> UpgradeTreeUIClass;
 
-	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	UPROPERTY(EditAnywhere, Category = "Tower")
 	float FireRate = 0.5f;
 
-	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	UPROPERTY(EditAnywhere, Category = "Tower")
 	float Range = 400.0f;
 
-	UPROPERTY(VisibleAnywhere, Category = "Tower")
+	UPROPERTY(EditAnywhere, Category = "Tower")
 	float Strength = 25.0f;
 	
 	UPROPERTY(VisibleAnywhere, Category = "Tower")

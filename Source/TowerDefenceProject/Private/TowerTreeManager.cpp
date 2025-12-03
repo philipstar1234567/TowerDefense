@@ -50,6 +50,7 @@ void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 	case 1:
 		Tower->Range *= 2.0f;
 		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
+		Tower->FixRangeMeshSize();
 		break;
 	case 2:
 		Tower->FireRate /= 2.0f;
@@ -68,6 +69,7 @@ void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 	case 6:
 		Tower->Range *= 1.4f;
 		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
+		Tower->FixRangeMeshSize();
 		break;
 	case 7:
 		Tower->Strength *= 1.4f;
@@ -75,6 +77,7 @@ void ATowerTreeManager::UpgradeTower(ATestTower* Tower)
 	case 8:
 		Tower->Range *= 1.4f;
 		Tower->EnemyDetector->SetSphereRadius(Tower->Range);
+		Tower->FixRangeMeshSize();
 		break;
 	case 9:
 		Tower->FireRate /= 1.4f;
