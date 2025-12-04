@@ -40,7 +40,7 @@ public:
 	void GoToNode(ATestTower* Tower, UTowerNode* NextNode);
 
 	/**
-	 * @brief Appliees stat change according to the tower's current node
+	 * @brief Applies stat change according to the tower's current node
 	 * 
 	 * This function assumes it's being called after GoToNode() has just
 	 * changed the Tower's current node, and therefore doesn't have a

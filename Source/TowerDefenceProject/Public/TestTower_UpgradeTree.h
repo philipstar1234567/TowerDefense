@@ -6,6 +6,9 @@
 
 class Node;
 
+/**
+ * @brief NOT USED, DON'T BOTHER READING
+ */
 class TOWERDEFENCEPROJECT_API TestTower_UpgradeTree
 {
 public:
